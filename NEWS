@@ -1,0 +1,9 @@
+Changes in Version 2.0-1
+  
+  o Bug fixes for the function strata.LH.
+
+
+  
+Changes in Version 2.0-0
+
+  o First CRAN release of the stratification package.

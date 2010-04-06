@@ -10,8 +10,8 @@ This package contains various functions for univariate stratification of survey 
 \tabular{ll}{
 Package: \tab stratification\cr
 Type: \tab Package\cr
-Version: \tab 2.0-0\cr
-Date: \tab 2010-03-11\cr
+Version: \tab 2.0-1\cr
+Date: \tab 2010-04-06\cr
 License: \tab GPL-2\cr
 }
 
@@ -26,7 +26,7 @@ To determine the stratum boundaries first and, in a second step, the stratum sam
 To determine the optimal stratum boundaries and sample sizes in a single step:\cr
 \code{\link{strata.LH}}: generalized Lavallee-Hidiroglou method with Sethi's (1963) or Kozak's (2004) algorithm\cr
 
-All these functions create objects of class "strata" which can be visualized with \code{\link{print.strata}} and \code{\link{plot.strata}}. One can also apply, with the function \code{\link{var.strata}}, a stratified design to a survey variable \eqn{Y} different from the one used for the construction of the stratified design.\cr
+All these functions create objects of class "strata", which can be visualized with \code{\link{print.strata}} and \code{\link{plot.strata}}. One can also apply, with the function \code{\link{var.strata}}, a stratified design to a survey variable \eqn{Y} different from the one used for the construction of the stratified design.\cr
 
 
 \bold{INFORMATION RELATIVE TO MANY FUNCTIONS}\cr
@@ -83,13 +83,13 @@ The \code{model.control} argument is a list that can supply any of the following
   \item{\code{ptakenone}}{ A numeric: the survival rate in the take-none stratum, if a take-none stratum is added to the stratified design. The default is 1. }
   \item{\code{pcertain}}{ A numeric: the survival rate in the certain stratum, if a certain stratum is added to the stratified design. The default is 1. }
   \item{\code{gamma}}{ A numeric: the exponent of \eqn{X} in the residual variance of the "linear" model. The default is 0. }
-  \item{\code{epsilon}}{ A numeric: the probability that the \eqn{Y}-value for a unit is equal to the \eqn{X}-value for a randomly selected unit in the population. It concerns the "random" model only. The default is 0.}
+  \item{\code{epsilon}}{ A numeric: the probability that the \eqn{Y}-value for a unit is equal to the \eqn{X}-value for a randomly selected unit in the population. It concerns the "random" model only. The default is 0.\cr}
 }
 
-.\cr
-
 ADJUSTMENT FOR A TAKE-ALL STRATUM\cr
-If, at the end of the computations, the solution reached by any of these functions contains at least one take-some stratum with \eqn{n_h > N_h}{nh>Nh}, the computations are carried out again setting the take-some stratum with the largest units as a take-all stratum. This is done until \eqn{n_h \leq N_h}{nh<=Nh} for all the take-some strata. For the function \code{strata.bh} only, this adjustment is optional (argument \code{takeall.adjust}).\cr
+If, at the end of the computations, the solution reached by any of these functions contains at least one take-some stratum with \eqn{n_h > N_h}{nh>Nh}, the computations are carried out again setting the take-some stratum with the largest units as a take-all stratum. This is done until \eqn{n_h \leq N_h}{nh<=Nh} for all the take-some strata. This adjustment is optional for the function \code{strata.bh} (argument \code{takeall.adjust}).\cr
+
+Note: In special circumstances, the algorithm might result in more than one take-all stratum. If non non-response is taken into account in the take-all strata, we can see them as forming one big take-all stratum. However, if non-response occurs in those strata, their boundaries influence the value of the optimization criteria (\eqn{n} or \eqn{CV}). In that case, we cannot see them as forming one big take-all stratum.\cr
 
 ROUNDING of the \eqn{n_h}{nh}'s \cr
 These functions return the sample sizes \code{nh}, which are integers, but also the non-integer values of these sample sizes, named \code{nh.nonint}. The vector \code{nh.nonint} is the result of the application of the allocation rule. The \code{nh.nonint} values are rounded to get the integer sample sizes \code{nh}. Here is how the rounding is done. If a target \code{CV} is requested, the values are simply rounded to the largest integer. However, if a target \code{n} is requested, the rounding is a little more complicated because the \code{nh} should sum to the target \code{n} and we do not want positive nh inferior to 1 to be rounded to zero. Therefore, we first round to 1 the positive nh inferior to 1. Then we calculate how many values (say \code{nup}) must be rounded to the largest integer and how many must be rounded to the smallest integer in order to fulfill the condition \code{sum(nh)=n}. We choose the \code{nup} values with the largest decimal part for the ceiling rounding, the other \code{nh} are rounded down.    
@@ -102,7 +102,7 @@ Baillargeon, S. and Rivest, L.-P. (2010). Univariate stratification in R with th
 
 Baillargeon, S., Rivest, L.-P., Ferland, M. (2007). Stratification en enquetes entreprises : Une revue et quelques avancees. \emph{Proceedings of the Survey Methods Section, 2007 SSC Annual Meeting}. \url{ http://www.ssc.ca/survey/documents/SSC2007_S_Baillargeon.pdf }
 
-Dalenius, T. and Hodges, J.L.,Jr. (1959). Minimum variance stratification. \emph{Journal of the American Statistical Association}, \bold{54}, 88-101.
+Dalenius, T. and Hodges, J.L., Jr. (1959). Minimum variance stratification. \emph{Journal of the American Statistical Association}, \bold{54}, 88-101.
 
 Gunning, P. and Horgan, J.M. (2004). A new algorithm for the construction of stratum boundaries in skewed populations. \emph{Survey Methodology}, \bold{30}(2), 159-166.
 

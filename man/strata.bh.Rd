@@ -13,7 +13,7 @@ strata.bh(x, bh, n = NULL, CV = NULL, Ls = 3, certain = NULL,
 }
 \arguments{
   \item{x}{ A vector containing the values of the stratification variable \eqn{X} for every unit in the population. }
-  \item{bh}{ A vector of the \eqn{L-1} between stratum boundaries where \eqn{L} is the total number of strata. Therefore, if \code{takenone=0} then \eqn{L}=\code{Ls}, and if \code{takenone=1} then \eqn{L}=\code{Ls}+1. }
+  \item{bh}{ A vector of the \eqn{L-1} stratum boundaries where \eqn{L} is the total number of strata. Therefore, if \code{takenone=0} then \eqn{L}=\code{Ls}, and if \code{takenone=1} then \eqn{L}=\code{Ls}+1. }
   \item{n}{ A numeric: the target sample size. It has no default value. The argument \code{n} or the argument \code{CV} must be input. }
   \item{CV}{ A numeric: the target coefficient of variation or relative root mean squared error if \code{takenone}=1. It has no default value. The argument \code{CV} or the argument \code{n} must be input. }
   \item{Ls}{ A numeric: the number of sampled strata (excluding the take-none stratum). The default is 3. }

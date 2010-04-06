@@ -26,7 +26,9 @@ var.strata(strata, y = NULL, rh = strata$args$rh, rh.postcorr =
 }
 \details{
 POSTERIOR CORRECTION FOR NON-RESPONSE\cr
-The optional posterior correction for non-response is done as follows. For each take-some stratum, \eqn{n_h}{nh} is increased if the input \code{rh} is lower than the anticipated response rate in the \code{strata.bh} object, and \eqn{n_h}{nh} is decreased if the input \code{rh} is higher than the anticipated response rate given when creating the \code{strata.bh} object. The modification of \eqn{n_h}{nh} is done by multiplying it by \code{strata$args$rh/rh}. The weakness of this posterior correction is that it cannot take into account non-response in a take-all stratum which however affect the precision of the survey estimator.
+The optional posterior correction for non-response is done as follows. For each take-some stratum, \eqn{n_h}{nh} is increased if the input \code{rh} is lower than the anticipated response rate in the \code{strata.bh} object, and \eqn{n_h}{nh} is decreased if the input \code{rh} is higher than the anticipated response rate given when creating the \code{strata.bh} object. The modification of \eqn{n_h}{nh} is done by multiplying it by \code{strata$args$rh/rh}.\cr
+
+The weakness of this posterior correction is that it cannot take into account non-response in a take-all stratum. In that stratum, \eqn{n_h}{nh} cannot be increased since it is equal to \eqn{N_h}{Nh}. To correctly account for non-response in a take-all stratum, the boundary of the stratum has to be lowered. This is what the generalized Lavallee-Hidiroglou method does (\code{\link{strata.LH}}).
 }
 \value{
   \item{nh }{A vector of length \code{L} containing the sample sizes \eqn{n_h}{nh}, i.e. the number of units to sample in each stratum. This number can be different than \code{strata$nh} if \code{rh.postcorr=TRUE}.}

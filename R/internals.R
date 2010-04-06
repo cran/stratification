@@ -166,7 +166,8 @@ if(!missing(rh)) { ### dépend de ptakenone
 
 if (!missing(initbh)) {
 # En commentaires : méthode envisagée mais mise de côté
-    out$initbh <-  if(is.null(initbh)) quantile(out$x,probs=(1:(Ls-1))/Ls) else initbh
+    change <- if (missing(algo.control)) FALSE else { if (is.null(algo.control$rep)) FALSE else { if(algo.control$rep=="change") TRUE else FALSE } }
+    out$initbh <-  if(is.null(initbh)||change) quantile(out$x,probs=(1:(Ls-1))/Ls) else initbh
 #    out$initbh <- initbh
 #    if(!is.null(out$initbh)) {
          if ((length(out$initbh)==Ls-1)&&(takenone==1)) {

@@ -89,7 +89,7 @@ if (algo=="Kozak")
         dimnames(desc.rep)<-list(1:nrow(desc.rep),c("opti","takeall",paste("b",1:(L-1),sep=""),"niter","maxstep","maxstill","initbh.type",
                                  paste("initb",1:(L-1),sep=""),"Nhok.initbh","nhok.initbh",paste("b",1:(L-1),"i",sep=""),"Nhok.robust","nhok.robust"))
         # bhi.robust (matrice numérique) va contenir les bornes initiales par défaut pour chaque valeur de takeall utilisée 
-        # + opti dont ona besoin pour l'algo de Kozak + résultats des tests sur Nh et nh. 
+        # + opti dont on a besoin pour l'algo de Kozak + résultats des tests sur Nh et nh.
         # J'enregistre ces résultats afin de ne pas avoir besoin de les obtenir inutilement plus d'une fois.
         bhi.robust <- matrix(NA,nrow=Ls-takeall,ncol=L+2,dimnames=list(takeall:(Ls-1),c(paste("b",1:(L-1),"i",sep=""),"Nhok","nhok","opti")))
         if ("change"==rep) {
@@ -105,7 +105,7 @@ if (algo=="Kozak")
         rowrep <- 0
         for (idbhi in bhi_type)
         {
-            A <- Aii <- Ai; B <- Bii <- Bi; C <- Cii <- Ci
+#            A <- Aii <- Ai; B <- Bii <- Bi; C <- Cii <- Ci
             
             # calcul de bh, Nhok, nhok et opti pour takeall donné en entrée + sauvegarde
             if ("geo"==idbhi) {
@@ -120,20 +120,27 @@ if (algo=="Kozak")
             bhi <- rep(NA,L+2*(Ls-takeall))
             names(bhi) <- c(paste("initb",1:(L-1),sep=""),"Nhok",paste("nhok",takeall:(Ls-1),sep=""),paste("opti",takeall:(Ls-1),sep=""))
             bhi[1:(L-1)] <- bh
-            valid<-FALSE
-            while(!valid) {
-               calculn<-strata.internal(x=x,N=length(x),bh=bh,findn=findn,n=n,CV=CV,Ls=Ls,Nc=Nc,EYc=EYc,
-                                          alloc=list(q1=q1,q2=q2,q3=q3),takenone=length(Aii),
-                                          bias.penalty=bias.penalty,takeall=length(Cii),rh=rhC,model=model,
-                                          model.control=list(beta=beta,sig2=sig2,ph=ph,gamma=gamma,epsilon=epsilon))
-               bhi["Nhok"] <- testNh(calculn$Nh,A,B,C,minNh)
-               bhi[paste("nhok",length(Cii),sep="")] <- testnh(calculn$nh,B,C)
-               bhi[paste("opti",length(Cii),sep="")] <- calculn$opti
-               if (!is.na(calculn$opti)) { valid <- TRUE } else {
-                    Bii<-Bii[-length(Bii)]
-                    Cii<-c(L-length(Cii),Cii)
-               }             
-            }
+            calculn<-strata.internal(x=x,N=length(x),bh=bh,findn=findn,n=n,CV=CV,Ls=Ls,Nc=Nc,EYc=EYc,
+                                     alloc=list(q1=q1,q2=q2,q3=q3),takenone=length(Ai),
+                                     bias.penalty=bias.penalty,takeall=length(Ci),rh=rhC,model=model,
+                                     model.control=list(beta=beta,sig2=sig2,ph=ph,gamma=gamma,epsilon=epsilon))
+            bhi["Nhok"] <- testNh(calculn$Nh,Ai,Bi,Ci,minNh)
+            bhi[paste("nhok",length(Ci),sep="")] <- testnh(calculn$nh,Bi,Ci)
+            bhi[paste("opti",length(Ci),sep="")] <- calculn$opti
+#            valid<-FALSE
+#            while(!valid) {
+#               calculn<-strata.internal(x=x,N=length(x),bh=bh,findn=findn,n=n,CV=CV,Ls=Ls,Nc=Nc,EYc=EYc,
+#                                          alloc=list(q1=q1,q2=q2,q3=q3),takenone=length(Aii),
+#                                          bias.penalty=bias.penalty,takeall=length(Cii),rh=rhC,model=model,
+#                                          model.control=list(beta=beta,sig2=sig2,ph=ph,gamma=gamma,epsilon=epsilon))
+#               bhi["Nhok"] <- testNh(calculn$Nh,A,B,C,minNh)
+#               bhi[paste("nhok",length(Cii),sep="")] <- testnh(calculn$nh,B,C)
+#               bhi[paste("opti",length(Cii),sep="")] <- calculn$opti
+#               if (!is.na(calculn$opti)) { valid <- TRUE } else {
+#                    Bii<-Bii[-length(Bii)]
+#                    Cii<-c(L-length(Cii),Cii)
+#               }
+#            }
             
             for (idmaxstep in maxstep_val)
             {
@@ -141,7 +148,8 @@ if (algo=="Kozak")
                 
                 for (idrep in 1:repid)
                 {
-                    A <- Aii; B <- Bii; C <- Cii
+#                    A <- Aii; B <- Bii; C <- Cii
+                    A <- Ai; B <- Bi; C <- Ci
                     valid<-FALSE
                     run <- 0
                     rowrep <- rowrep+1

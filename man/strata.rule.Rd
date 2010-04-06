@@ -52,7 +52,7 @@ strata.geo(x, n = NULL, CV = NULL, Ls = 3, certain=NULL,
 The efficiency of the cumulative root frequency method depends on the number of classes \code{nclass}. However, there is no theory about how to choose the best value for \code{nclass} (Hedlin 2000). This is a limit of the method.
 }
 \references{
-Dalenius, T. and Hodges, J.L.,Jr. (1959). Minimum variance stratification. \emph{Journal of the American Statistical Association}, \bold{54}, 88-101.
+Dalenius, T. and Hodges, J.L., Jr. (1959). Minimum variance stratification. \emph{Journal of the American Statistical Association}, \bold{54}, 88-101.
 
 Gunning, P. and Horgan, J.M. (2004). A new algorithm for the construction of stratum boundaries in skewed populations. \emph{Survey Methodology}, \bold{30}(2), 159-166.
 
