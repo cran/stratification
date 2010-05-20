@@ -10,8 +10,8 @@ This package contains various functions for univariate stratification of survey 
 \tabular{ll}{
 Package: \tab stratification\cr
 Type: \tab Package\cr
-Version: \tab 2.0-1\cr
-Date: \tab 2010-04-06\cr
+Version: \tab 2.0-2\cr
+Date: \tab 2010-05-20\cr
 License: \tab GPL-2\cr
 }
 
@@ -31,9 +31,15 @@ All these functions create objects of class "strata", which can be visualized wi
 
 \bold{INFORMATION RELATIVE TO MANY FUNCTIONS}\cr
 
-The functions \code{\link{strata.bh}}, \code{\link{strata.cumrootf}}, \code{\link{strata.geo}} and \code{\link{strata.LH}} need to be given \code{x}, the values of the stratification variable \eqn{X}, \code{Ls}, the desired number of strata, \code{alloc}, an allocation rule, and a target sample size \code{n} or a target level of precision \code{CV} for the survey estimator. However, for Sethi's (1963) algorithm, only a target \code{CV} can be given. To reach a target \code{n} using the generalized Lavallee-Hidiroglou method, Kozak's (2004) algorithm has to be used with the \code{\link{strata.LH}} function.\cr   
+The functions \code{\link{strata.bh}}, \code{\link{strata.cumrootf}}, \code{\link{strata.geo}} and \code{\link{strata.LH}} need to be given \code{x}, the values of the stratification variable \eqn{X}, \code{Ls}, the desired number of sampled strata, \code{alloc}, an allocation rule, and a target sample size \code{n} or a target level of precision \code{CV} for the survey estimator. However, for Sethi's (1963) algorithm, only a target \code{CV} can be given. To reach a target \code{n} using the generalized Lavallee-Hidiroglou method, Kozak's (2004) algorithm has to be used with the \code{\link{strata.LH}} function.\cr   
 
 Throughout the package, strata number 1 contains the smallest units and strata number \eqn{L} the biggest ones. So every vector of boundaries contains numbers in ascending order. The function \code{\link{strata.bh}} must be given boundaries \code{bh} fulfilling this condition. This remark also applies to the argument \code{initbh} of \code{\link{strata.LH}} used to give initial boundaries.\cr
+
+DEFINITION OF STRATUM BOUNDARIES\cr
+Let's note \eqn{b_0, b_1,\ldots, b_L} the stratum boundaries. Stratum \eqn{h} contains all the
+units with an \eqn{X}-value in the interval \eqn{[b_{h-1},b_h)} for \eqn{h=1,\ldots,L} such that \eqn{b_0=min(X)} and \eqn{b_L=max(X)+1}, where
+\eqn{min(X)} and \eqn{max(X)} are respectively the minimum and the maximum values of the stratification variable. The argument \code{bh} of \code{strata.bh}, the argument \code{initbh} of \code{strata.LH} and the output value \code{bh} of any function of \pkg{stratification} with the prefix "strata" are length \eqn{L-1} vectors of the boundaries \eqn{b_1, b_2,\ldots, b_{L-1}}.\cr
+
 
 MORE DETAILS ABOUT THE TAKE-NONE STRATUM\cr
 The \code{Ls} argument refers to the number of sampled strata. If the stratified design does not have a take-none stratum then \code{Ls}=\eqn{L} is the total number of strata, otherwise \code{Ls}=\eqn{L-1}.

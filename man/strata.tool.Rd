@@ -22,6 +22,7 @@
   \item{xlab}{ A character string naming the \eqn{X} axis. }
   \item{\dots}{ Additional arguments affecting the print or the plot produced. }
 }
+\note{When the object of class "strata" contains a certain stratum, \code{plot.strata} removes from the data the units in this stratum before generating the histogram.}
 \author{ Sophie Baillargeon \email{Sophie.Baillargeon@mat.ulaval.ca} and\cr
 Louis-Paul Rivest \email{Louis-Paul.Rivest@mat.ulaval.ca} }
 \seealso{ \code{\link{strata.bh}}, \code{\link{strata.cumrootf}}, \code{\link{strata.geo}}, \code{\link{strata.LH}} }

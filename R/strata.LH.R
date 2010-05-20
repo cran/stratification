@@ -104,9 +104,7 @@ if (algo=="Kozak")
         # On fait rouler l'algo de Kozak un certain nombre de fois selon la valeur de 'rep'
         rowrep <- 0
         for (idbhi in bhi_type)
-        {
-#            A <- Aii <- Ai; B <- Bii <- Bi; C <- Cii <- Ci
-            
+        {           
             # calcul de bh, Nhok, nhok et opti pour takeall donné en entrée + sauvegarde
             if ("geo"==idbhi) {
                  bh <- suppressWarnings(strata.geo(x=x,n=n,CV=CV,Ls=Ls,certain=certain,alloc=list(q1=q1,q2=q2,q3=q3),rh=rh,model=model,
@@ -126,29 +124,13 @@ if (algo=="Kozak")
                                      model.control=list(beta=beta,sig2=sig2,ph=ph,gamma=gamma,epsilon=epsilon))
             bhi["Nhok"] <- testNh(calculn$Nh,Ai,Bi,Ci,minNh)
             bhi[paste("nhok",length(Ci),sep="")] <- testnh(calculn$nh,Bi,Ci)
-            bhi[paste("opti",length(Ci),sep="")] <- calculn$opti
-#            valid<-FALSE
-#            while(!valid) {
-#               calculn<-strata.internal(x=x,N=length(x),bh=bh,findn=findn,n=n,CV=CV,Ls=Ls,Nc=Nc,EYc=EYc,
-#                                          alloc=list(q1=q1,q2=q2,q3=q3),takenone=length(Aii),
-#                                          bias.penalty=bias.penalty,takeall=length(Cii),rh=rhC,model=model,
-#                                          model.control=list(beta=beta,sig2=sig2,ph=ph,gamma=gamma,epsilon=epsilon))
-#               bhi["Nhok"] <- testNh(calculn$Nh,A,B,C,minNh)
-#               bhi[paste("nhok",length(Cii),sep="")] <- testnh(calculn$nh,B,C)
-#               bhi[paste("opti",length(Cii),sep="")] <- calculn$opti
-#               if (!is.na(calculn$opti)) { valid <- TRUE } else {
-#                    Bii<-Bii[-length(Bii)]
-#                    Cii<-c(L-length(Cii),Cii)
-#               }
-#            }
-            
+            bhi[paste("opti",length(Ci),sep="")] <- calculn$opti           
             for (idmaxstep in maxstep_val)
             {
                 idmaxstill <- if ("change"!=rep) maxstill else floor(idmaxstep*100/3)
                 
                 for (idrep in 1:repid)
                 {
-#                    A <- Aii; B <- Bii; C <- Cii
                     A <- Ai; B <- Bi; C <- Ci
                     valid<-FALSE
                     run <- 0

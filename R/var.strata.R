@@ -16,8 +16,8 @@ function(strata,y=NULL,rh=strata$args$rh,rh.postcorr=FALSE,model=c("none","logli
                            takeall=takeall,takenone=takenone,Ls=Ls,certain=strata$args$certain,testcertain=FALSE)
     for(i in 1:length(out.check)) assign(names(out.check)[i],out.check[[i]])
     
-    # Ajustement à postériori pour la non-réponse, si s=demandé
-    nh <- if (rh.postcorr) pmin(ceiling(strata$nh*strata$args$rh/rh),strata$Nh) else strata$nh   
+    # Ajustement à postériori pour la non-réponse, si demandé
+    nh <- if (rh.postcorr) pmin(ceiling(strata$nh.nonint*strata$args$rh/rh),strata$Nh) else strata$nh       
 
     # Calcul de des espérances et variances anticipées
     if (!is.null(y)) {
@@ -53,7 +53,7 @@ function(x,...)
     cat("rh.postcorr =",x$args$rh.postcorr)
     if (is.null(x$args$y)) { 
         cat("\nmodel =",x$args$model)
-        nparam <- if (identical(x$args$model,"loglinear")) length(x$args$model.control)-2 else length(x$args$model.control)
+        nparam <- length(x$args$model.control)
         if (nparam>0) {
             cat(" : ")
             for (i in 1:nparam) {

@@ -476,7 +476,7 @@ void KozakModif (double *x, double *x1, int *wtx1, int *N, int *N1, int *findn, 
 /*******************
  *    checknhC     *
  * inutilisée à partir du 15 février car on adopte une nouvelle approche 
- * pour les bornes initiales (voir fichier internals.R 
+ * pour les bornes initiales (voir fichier internals.R) 
  *******************/
 
 

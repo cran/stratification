@@ -29,11 +29,15 @@ function(x,...)
         }
     }
     if (!is.null(x$args$algo)) {
-        cat("\n")
-        if (identical(as.character(x$call[[1]]),"strata.LH.Kozak")) cat("algo = ",x$args$algo," : ")
-        for (i in 1:length(x$args$algo.control)) {
-            cat(names(x$args$algo.control)[i],"=",x$args$algo.control[[i]])
-            if (i<length(x$args$algo.control)) cat(" , ")
+        if(is.null(x$nsol)) {
+             cat("\n")
+             if (identical(as.character(x$call[[1]]),"strata.LH.Kozak")) cat("algo = ",x$args$algo," : ")
+             for (i in 1:length(x$args$algo.control)) {
+                 cat(names(x$args$algo.control)[i],"=",x$args$algo.control[[i]])
+                 if (i<length(x$args$algo.control)) cat(" , ")
+             }
+        } else {
+             cat("\nmethod = complete enumeration")
         }
     }
     
@@ -98,7 +102,7 @@ function(x,logscale=FALSE,drop=0,main=paste("Graphical Representation of the Str
     if (!((length(drop)==1)&&isTRUE((drop%%1)==0)&&(isTRUE(drop>=0)||isTRUE(drop<x$Nh[L]))))
         stop("'drop' must be an integer between 0 and 'Nh[L]'-1 inclusively")
     data <- if(is.null(x$args$certain)) sort(x$args$x) else sort(x$args$x[-x$args$certain])     
-    data <- data[1:(sum(x$Nh)-length(x$args$certain)-drop)] # pour enlever les drop données les plus grandes
+    data <- data[1:(length(data)-drop)] # pour enlever les drop données les plus grandes
     if(logscale) data <- log(data)
     bh <- if (identical(as.character(x$call[[1]]),"strata.bh")) x$args$bh else x$bh
     bhfull <- if(logscale) c(min(data),log(bh),max(data)+1) else c(min(data),bh,max(data)+1)

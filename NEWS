@@ -1,7 +1,21 @@
+Changes in Version 2.0-2
+
+ o Minor correction in plot.strata when a certain stratum is included in the strata object.
+
+ o Bug fixes for the function strata.cumrootf for some rare cases.
+
+ o The function var.strata now applies the posterior correction for non-response to the non-integer nh.
+
+ o The function plot.var.strata now prints correctly the loglinear model parameters.
+
+ o The function plot.strata now prints "model = complete enumeration" if a complete enumeration was carried out.
+
+ o Minor modifications to the documentation.
+  
+  
 Changes in Version 2.0-1
   
-  o Bug fixes for the function strata.LH.
-
+  o Bug fixes for the function strata.LH concerning the modification of initial stratum boundaries if they do not meet the condition Nh>=minNh and nh>0.
 
   
 Changes in Version 2.0-0
