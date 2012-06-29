@@ -33,7 +33,8 @@ strata.bh(x, bh, n = NULL, CV = NULL, Ls = 3, certain = NULL,
   \item{n }{The total sample size (\code{sum(nh)}).}
   \item{nh.nonint }{A vector of length \eqn{L} containing the non-integer values of the sample sizes \eqn{n_h}{nh}.}
   \item{certain.info }{A vector giving statistics for the certain stratum (see \code{\link{stratification-package}}). It contains \code{Nc}, the number of units chosen a priori to be in the sample, and \code{meanc}, the anticipated mean of \eqn{Y} for these units. }
-  \item{opti.criteria }{The final value of the criteria to optimize : either the non-integer value of the total sample size (if a target \code{CV} was given) or the RRMSE associated to non-integer stratum sample sizes (if a target \code{n} was given).}
+  \item{opti.nh }{The final value of the criteria to optimize : either the sum of the integer stratum sample sizes (if a target \code{CV} was given) or the RRMSE associated to integer stratum sample sizes (if a target \code{n} was given).}
+  \item{opti.nhnonint }{The final value of the criteria to optimize : either the sum of the non-integer stratum sample sizes (if a target \code{CV} was given) or the RRMSE associated to non-integer stratum sample sizes (if a target \code{n} was given).}
   \item{meanh }{A vector of length \eqn{L} containing the anticipated means of \eqn{Y} in each stratum.}
   \item{varh }{A vector of length \eqn{L} containing the anticipated variances of \eqn{Y} in each stratum.}
   \item{mean }{A numeric: the anticipated global mean value of \eqn{Y}.}
@@ -46,6 +47,9 @@ strata.bh(x, bh, n = NULL, CV = NULL, Ls = 3, certain = NULL,
   \item{call }{The function call (object of class "call").}
   \item{date }{A character string that contains the system date and time when the function ended. }
   \item{args }{A list of all the arguments input to the function or used by default. }
+}
+\references{
+Baillargeon, S. and  Rivest L.-P. (2011). The construction of stratified designs in R with the package stratification. \emph{Survey Methodology}, \bold{37}(1), 53-65. \url{ http://www.statcan.gc.ca/pub/12-001-x/2011001/article/11447-eng.pdf }
 }
 \author{ Sophie Baillargeon \email{Sophie.Baillargeon@mat.ulaval.ca} and\cr
 Louis-Paul Rivest \email{Louis-Paul.Rivest@mat.ulaval.ca} }

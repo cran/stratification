@@ -9,36 +9,33 @@ function(x,...)
     # Section des arguments fournis
     cat("Given arguments:\n")
     cat("x = "); print(x$call$x)
-    if (!is.null(x$args$nclass)) cat("nclass =",x$args$nclass,", ")
-    if (!is.null(x$args$CV)) cat("CV =",x$args$CV,", ")
-    if (!is.null(x$args$n)) cat("n =",x$args$n,", ")
-    cat("Ls =",x$args$Ls)
-    if (!is.null(x$args$takenone)) cat(", takenone =",x$args$takenone)
-    if (!is.null(x$args$bias.penalty)) { if (x$args$takenone==1) cat(", bias.penalty =",x$args$bias.penalty)}
-    if (!is.null(x$args$takeall)) cat(", takeall =",x$args$takeall)
-    cat("\nallocation : q1 =",x$args$alloc$q1,", q2 =",x$args$alloc$q2,", q3 =",x$args$alloc$q3)
+    if (!is.null(x$args$nclass)) cat("nclass = ",x$args$nclass,", ",sep="")
+    if (!is.null(x$args$CV)) cat("CV = ",x$args$CV,", ",sep="")
+    if (!is.null(x$args$n)) cat("n = ",x$args$n,", ",sep="")
+    cat("Ls = ",x$args$Ls,sep="")
+    if (!is.null(x$args$takenone)) cat(", takenone = ",x$args$takenone,sep="")
+    if (!is.null(x$args$bias.penalty)) { if (x$args$takenone==1) cat(", bias.penalty = ",x$args$bias.penalty,sep="")}
+    if (!is.null(x$args$takeall)) cat(", takeall = ",x$args$takeall,sep="")
+    cat("\nallocation: q1 = ",x$args$alloc$q1,", q2 = ",x$args$alloc$q2,", q3 = ",x$args$alloc$q3,sep="")
     if (!is.null(x$args$model)) {
-        cat("\nmodel =",x$args$model)
+        cat("\nmodel = ",x$args$model,sep="")
         nparam <- length(x$args$model.control)
         if (nparam>0) {
-            cat(" : ")
+            cat(": ")
             for (i in 1:nparam) {
-                    cat(names(x$args$model.control)[i],"=",x$args$model.control[[i]])
-                    if (i<nparam) cat(" , ")
+                    cat(names(x$args$model.control)[i],"=",x$args$model.control[[i]],sep=" ")
+                    if (i<nparam) cat(", ")
             }
         }
     }
     if (!is.null(x$args$algo)) {
-        if(is.null(x$nsol)) {
              cat("\n")
-             if (identical(as.character(x$call[[1]]),"strata.LH.Kozak")) cat("algo = ",x$args$algo," : ")
+             cat("algo = ", x$args$algo, ": ", sep = "")
              for (i in 1:length(x$args$algo.control)) {
-                 cat(names(x$args$algo.control)[i],"=",x$args$algo.control[[i]])
-                 if (i<length(x$args$algo.control)) cat(" , ")
-             }
-        } else {
-             cat("\nmethod = complete enumeration")
-        }
+                 cat(names(x$args$algo.control)[i]," = ",x$args$algo.control[[i]],sep="")
+                 if (i<length(x$args$algo.control)) cat(", ")
+                 if (i==4) cat("\n              ")
+               }
     }
     
     # Section du tableau de stratification
@@ -90,7 +87,7 @@ function(x,...)
         print.default(est, print.gap = 2, quote = FALSE, right=TRUE)
     }
 
-    if (!is.null(x$converge)) { if (!x$converge) cat("\nWarning : The algorithm did not converge.\n") }
+    if (!is.null(x$converge)) { if (!x$converge) cat("\nWarning : the algorithm did not converge.\n") }
 }
 
 

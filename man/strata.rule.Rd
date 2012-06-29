@@ -34,7 +34,8 @@ strata.geo(x, n = NULL, CV = NULL, Ls = 3, certain=NULL,
   \item{n }{The total sample size (\code{sum(nh)}).}
   \item{nh.nonint }{A vector of length \eqn{L} containing the non integer values of sample sizes \eqn{n_h}{nh}.}
   \item{certain.info }{A vector giving statistics for the certain stratum (see \code{\link{stratification-package}}). It contains \code{Nc}, the number of units chosen a priori to be in the sample, and \code{meanc}, the anticipated mean of \eqn{Y} for these units. }
-  \item{opti.criteria }{The final value of the criteria to optimize : either the non-integer value of the total sample size (if a target \code{CV} was given) or the RRMSE associated to non-integer stratum sample sizes (if a target \code{n} was given).}
+  \item{opti.nh }{The final value of the criteria to optimize : either the sum of the integer stratum sample sizes (if a target \code{CV} was given) or the RRMSE associated to integer stratum sample sizes (if a target \code{n} was given).}
+  \item{opti.nhnonint }{The final value of the criteria to optimize : either the sum of the non-integer stratum sample sizes (if a target \code{CV} was given) or the RRMSE associated to non-integer stratum sample sizes (if a target \code{n} was given).}
   \item{bh }{A vector of the \eqn{L-1} stratum boundaries proposed by the method.}
   \item{meanh }{A vector of length \eqn{L} containing the anticipated means of \eqn{Y} in each stratum.}
   \item{varh }{A vector of length \eqn{L} containing the anticipated variances of \eqn{Y} in each stratum.}
@@ -52,6 +53,8 @@ strata.geo(x, n = NULL, CV = NULL, Ls = 3, certain=NULL,
 The efficiency of the cumulative root frequency method depends on the number of classes \code{nclass}. However, there is no theory about how to choose the best value for \code{nclass} (Hedlin 2000). This is a limit of the method.
 }
 \references{
+Baillargeon, S. and  Rivest L.-P. (2011). The construction of stratified designs in R with the package stratification. \emph{Survey Methodology}, \bold{37}(1), 53-65. \url{ http://www.statcan.gc.ca/pub/12-001-x/2011001/article/11447-eng.pdf }
+
 Dalenius, T. and Hodges, J.L., Jr. (1959). Minimum variance stratification. \emph{Journal of the American Statistical Association}, \bold{54}, 88-101.
 
 Gunning, P. and Horgan, J.M. (2004). A new algorithm for the construction of stratum boundaries in skewed populations. \emph{Survey Methodology}, \bold{30}(2), 159-166.

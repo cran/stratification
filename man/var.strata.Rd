@@ -45,6 +45,9 @@ The weakness of this posterior correction is that it cannot take into account no
   \item{date }{A character string that contains the system date and time when the function ended. }
   \item{args }{A list of all the arguments input to the function or used by default. }
 }
+\references{
+Baillargeon, S. and  Rivest L.-P. (2011). The construction of stratified designs in R with the package stratification. \emph{Survey Methodology}, \bold{37}(1), 53-65. \url{ http://www.statcan.gc.ca/pub/12-001-x/2011001/article/11447-eng.pdf }
+}
 \author{ Sophie Baillargeon \email{Sophie.Baillargeon@mat.ulaval.ca} and\cr
 Louis-Paul Rivest \email{Louis-Paul.Rivest@mat.ulaval.ca} }
 \seealso{ \code{\link{strata.bh}}, \code{\link{strata.cumrootf}}, \code{\link{strata.geo}}, \code{\link{strata.LH}} }

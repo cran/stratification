@@ -166,17 +166,17 @@ if(!missing(rh)) { ### dépend de ptakenone
 
 if (!missing(initbh)) {
 # En commentaires : méthode envisagée mais mise de côté
-    change <- if (missing(algo.control)) FALSE else { if (is.null(algo.control$rep)) FALSE else { if(algo.control$rep=="change") TRUE else FALSE } }
-    out$initbh <-  if(is.null(initbh)||change) quantile(out$x,probs=(1:(Ls-1))/Ls) else initbh
-#    out$initbh <- initbh
-#    if(!is.null(out$initbh)) {
-         if ((length(out$initbh)==Ls-1)&&(takenone==1)) {
-               b1<-quantile(out$x,probs=0.01)
-               if (b1==min(out$x)) b1<-unique(out$x)[2]
-               out$initbh <- c(b1,out$initbh)
-#               out$initbh <- c(min(out$x),out$initbh)
-         }
-         if (!((length(out$initbh)==Ls+takenone-1)&&is.numeric(out$initbh))) stop("'initbh' must be a numeric vector of length Ls+takenone-1 or Ls-1")
+  change <- if (missing(algo.control)) FALSE else { if (is.null(algo.control$rep)) FALSE else { if(algo.control$rep=="change") TRUE else FALSE } }
+  out$initbh <-  if(is.null(initbh)||change) quantile(out$x,probs=(1:(Ls-1))/Ls) else initbh
+#  out$initbh <- initbh
+#  if(!is.null(out$initbh)) {
+  if ((length(out$initbh)==Ls-1)&&(takenone==1)) {
+    b1<-quantile(out$x,probs=0.01)
+    if (b1==min(out$x)) b1<-unique(out$x)[2]
+    out$initbh <- c(b1,out$initbh)
+#    out$initbh <- c(min(out$x),out$initbh)
+  }
+  if (!((length(out$initbh)==Ls+takenone-1)&&is.numeric(out$initbh))) stop("'initbh' must be a numeric vector of length Ls+takenone-1 or Ls-1")
 #    }
 }
 
@@ -198,26 +198,34 @@ if (!missing(algo.control)) {
     if(!is.list(algo.control)) stop("'algo.control' must be a list")
     if(length(algo.control)>0&&is.null(names(algo.control))) stop("'The elements of the list 'algo.control' must be named")
     
+    # Le paramètre "method" doit être traité avant car certaines valeurs par défaut dependent de lui
     out$method <- if(is.null(algo.control$method)) "original" else algo.control$method
     if (!(out$method%in%c("original","modified"))) stop("'method' must be the character string 'original' or 'modified'")
 
-    if(is.null(algo.control$maxiter)) {
-        out$maxiter <- if( out$method=="modified") 3000 else if(out$method=="original") 10000 else 500
-    } else out$maxiter <- algo.control$maxiter
-    out$minNh <- if(is.null(algo.control$minNh)) 2 else algo.control$minNh
-    out$maxstep <- if(is.null(algo.control$maxstep)) 3 else algo.control$maxstep
-    out$maxstill <- if(is.null(algo.control$maxstill)) 100 else algo.control$maxstill
-    if(is.null(algo.control$rep)) {
-        out$rep <- if( out$method=="modified") 1 else 3
-    } else out$rep <- algo.control$rep
-    # utile seulement si je veux arrêter les répétitions après un certain nombre de répétitions identiques
-    # out$stoprep <- if(is.null(algo.control$rep)) TRUE else FALSE
+    # Valeurs par défaut
+    out$maxiter <- if(is.null(algo.control$maxiter)) {
+        if(out$algo=="Sethi") 500 else {if( out$method=="modified") 3000 else 10000}
+    } else algo.control$maxiter
     out$minsol <- if(is.null(algo.control$minsol)) 1000 else algo.control$minsol
+    out$idopti <- if(is.null(algo.control$idopti)) "nh" else algo.control$idopti
+    out$minNh <- if(is.null(algo.control$minNh)) 2 else algo.control$minNh
+    out$maxstep <- if(is.null(algo.control$maxstep)) 6 else algo.control$maxstep
+    out$maxstill <- if(is.null(algo.control$maxstill)) 100 else algo.control$maxstill
+    out$rep <- if(is.null(algo.control$rep)) {        
+      if( out$method=="modified") 1 else "change"
+    } else algo.control$rep
+    #r# Mis de côté :
+    #r# utile seulement si je veux arrêter les répétitions après un certain nombre de répétitions identiques
+    #r# out$stoprep <- if(is.null(algo.control$rep)) TRUE else FALSE
     
+    # Erreurs si arguments donnés invalides
+    if (!((length(out$maxiter)==1)&&isTRUE((out$maxiter%%1)==0)&&isTRUE(out$maxiter>0))) stop("'maxiter' must be a positive integer")
+    if (!((length(out$minsol)==1)&&isTRUE((out$minsol%%1)==0)&&isTRUE(out$minsol>=2)&&isTRUE(out$minsol<=1000000)))
+      stop("'minsol' must be an integer between 2 and 1 000 000 inclusively")
+    if (!(out$idopti%in%c("nh","nhnonint"))) stop("'idopti' must be the character string 'nh' or 'nhnonint'")        
     if (!((length(out$minNh)==1)&&isTRUE((out$minNh%%1)==0)&&isTRUE(out$minNh>=2))) stop("'minNh' must be an integer greater or equal to 2")
     if (!((length(out$maxstep)==1)&&isTRUE((out$maxstep%%1)==0)&&(isTRUE(out$maxstep>=2)||isTRUE(out$maxstep<=10))))
         stop("'maxstep' must be an interger between 2 and 10 inclusively")
-    if (!((length(out$maxiter)==1)&&isTRUE((out$maxiter%%1)==0)&&isTRUE(out$maxiter>0))) stop("'maxiter' must be a positive integer")
     if (!((length(out$maxstill)==1)&&isTRUE((out$maxstill%%1)==0)&&isTRUE(out$maxstill>0))) stop("'maxstill' must be a positive integer")
     if (is.character(out$rep)) {
           if ( !( length(out$rep)==1 && out$rep=="change" ) ) stop("'rep' must be a positive integer or 'change'") 
@@ -225,8 +233,6 @@ if (!missing(algo.control)) {
           if ( !( length(out$rep)==1 && isTRUE((out$rep%%1)==0) && isTRUE(out$rep>0) ) )
                stop("'rep' must be a positive integer or 'change'")
     }
-    if (!((length(out$minsol)==1)&&isTRUE((out$minsol%%1)==0)&&isTRUE(out$minsol>=100)&&isTRUE(out$minsol<=1000000)))
-          stop("'minsol' must be an integer between 100 and 1 000 000 inclusively")
 }
 
 if (!missing(y)) {
@@ -248,16 +254,30 @@ return(out)
 
 
 initbh.robust <- function(x1,N1,Ls,takenone,takeall,minNh,wtx1) {
+  
+     # fonction pour attribuer une valeur à initbh à partir de pos
+     posi2bh <- function(x1, posi){
+       bh <- vector(length=length(posi))
+       for (i in 1:length(posi)){
+         bh[i] <- if (posi[i]>1) {
+           (x1[posi[i]-1] + x1[posi[i]])/2  
+         } else {
+           x1[posi[i]] - 0.01
+         }
+       }
+       return(bh)
+     }
+     ## fin de la fonction
      initbh <- vector(length=Ls-1)
      wtx1_copy <- wtx1
    ### strates takeall s'il y en a ##
      # On les veux les plus petites possibles, tout en respectant minNh, car elles peuvent causer un n négatif.
-     # On ne soucie pas de pouvoir calculer une variance des ces strates (N1h>1 ou au moins 2 unités différentes)
+     # On ne se soucie pas de pouvoir calculer une variance dans ces strates (N1h>1 ou au moins 2 unités différentes)
      # car cette variance peut être nulle sans causer de problèmes dans les calculs subséquents.
      if (takeall!=0) {
           for (i in 1:takeall) {
                pos <- sum(cumsum(rev(wtx1_copy))<minNh)
-               initbh[Ls-i] <- x1[N1-pos]
+               initbh[Ls-i] <- posi2bh(x1,N1-pos)
                N1 <- N1 - pos - 1
                wtx1_copy <- wtx1_copy[1:N1]
           }
@@ -307,11 +327,11 @@ initbh.robust <- function(x1,N1,Ls,takenone,takeall,minNh,wtx1) {
                pos <- change[keeprow,1:(Ls-takeall-1)]
                iter <- iter + 1 # pour éviter les boucles infinies imprévues
           }
-          initbh[1:(Ls-takeall-1)] <- x1[pos]
+          initbh[1:(Ls-takeall-1)] <- posi2bh(x1,pos)
      }
    ### strate takenone s'il y en a ###
      # strate takenone initiale nulle car elle est la principale cause d'un n négatif.
-     if (1==takenone) initbh <- c(min(x1),initbh)
+     if (1==takenone) initbh <- c(min(x1)- 0.01,initbh)
      return(initbh)
 }
 
@@ -358,13 +378,34 @@ function(x,stratumID,model,beta,sig2,ph,pcertain,gamma,epsilon,A,L)
     return(out)
 }
 
-RMSE <- 
-function(bias.penalty,TAY,Nh,VYh,nh,rh,B,C,TY)
+RMSE <- function(bias.penalty, TAY, Nh, VYh, nh, rh, B, C) 
+{ # Calcule le RMSE (se)
+  # créée le 27 avril 2012
+  se <- if ( any(nh[B] <= 0) ) {
+    NA
+  } else {
+    sqrt(max((bias.penalty*TAY)^2 + sum(((Nh^2)*VYh*(1/(nh*rh) - 1/Nh))[c(B, C)]), 0))
+  }
+  return(se)
+}
+
+RMSE2 <- function(bias.penalty, TAY, Nh, VYh, nh, rh, A) 
+{ # Calcule le RMSE (se) en utilisant la fonctionc
+  # créée le 27 avril 2012
+  RMSE <- 0
+  resuC <- .C("RMSEC", as.double(bias.penalty), as.double(TAY), as.integer(Nh), as.double(VYh), 
+              as.double(nh), as.double(rh), as.integer(length(A)), as.integer(length(Nh)),
+              RMSE=as.double(RMSE), PACKAGE="stratification") 
+  se <- resuC$RMSE
+  return(se)
+}
+    
+statMSEbias <- function(bias.penalty, TAY, Nh, VYh, nh, rh, B, C, TY)
 { # Calcule le RMSE (se), relativebias (bias) et propbiasMSE (bias)
-     se<- if (all(is.na(nh[B]))||any(nh[B]==0)) NA else sqrt((bias.penalty*TAY)^2+sum(((Nh^2)*VYh*(1/(nh*rh)-1/Nh))[c(B,C)]))
-     prop<-(bias.penalty*TAY)^2/(se^2)
-     bias<-(bias.penalty*TAY)/TY
-     out <- list(se=se,prop=prop,bias=bias)
+     se <- RMSE(bias.penalty=bias.penalty, TAY=TAY, Nh=Nh, VYh=VYh, nh=nh, rh=rh, B=B, C=C)
+     prop <- (bias.penalty*TAY)^2/(se^2)
+     bias <- (bias.penalty*TAY)/TY
+     out <- list(se=se, prop=prop, bias=bias)
      return(out)
 # Note : dans l'article et dans le programme survey estimator = somme de Y (Ty),
 # alors que dans le package survey estimator = moyenne de Y (Ey).
@@ -387,47 +428,28 @@ function(xgiven,N,L,certain,bhfull)
      return(stratumID)
 }
 
+getnhr <- function(nhnonint, findn, n, L, Nh, takenone, takeall)
+{ # Arrondissement des nhnonint (ne fait qu'appeler une fonction C)
+  # créée le 25 avril 2012
+  nh <- rep(0,L)
+  if (is.null(n)) n <- 0
+  resuC <- .C("getnhC",as.double(nhnonint),as.integer(findn),as.integer(n),as.integer(L),
+      as.integer(Nh),as.integer(takenone),as.integer(takeall),nh=as.integer(nh),
+      PACKAGE="stratification") 
+  nh <- resuC$nh
+  return(nh)
+}
+
 getnh <-
 function(L,A,B,C,n,findn,T1,ah,Nh)
 { # Calcule les nh selon la formule de l'article (en utilisant n (napprox ou ngiven))
-     nh.nonint <- nh <- vector(length=L)
-     nh.nonint[A] <- nh[A] <- 0
+     nh.nonint <- vector(length=L)
+     nh.nonint[A] <- 0
      nh.nonint[B] <- (n-T1)*ah
-     nh.nonint[C] <- nh[C] <- Nh[C]
+     nh.nonint[C] <- Nh[C]
      # Arrondissement des nh dans les strates takesome
-     if(all(is.na(nh.nonint[B]))) {
-          nh[B] <- nh.nonint[B]
-     } else {
-          if (findn) { nh[B] <- ceiling(nh.nonint[B])
-          } else { 
-               # Si des nh sont < 1 mais supérieurs à 0, je les force à être ramenés à 1
-               nh[B] <- ifelse(nh.nonint[B]>0&nh.nonint[B]<1,1,NA)
-               Bnonint <- (1:L)[is.na(nh)] # position des chiffres à arrondir
-               # nombre de chiffres à arrondir vers le haut et vers le bas
-               nhaut <- n - sum(nh[A]) - sum(nh.nonint[B]>0&nh.nonint[B]<1) - sum(floor(nh.nonint[Bnonint])) - T1
-               nbas <- length(Bnonint) - nhaut
-               reste <- nh.nonint[Bnonint]%%1
-               rankreste <- rank(reste,ties.method="first")
-               idbas <- rankreste%in%(1:nbas)
-               # Arrondissement vers le bas pour les nbas nombre avec les plus petites parties décimales 
-               if(nbas>0) nh[Bnonint][idbas] <- floor(nh.nonint[Bnonint][idbas])
-               # Arrondissement vers le haut pour les nhaut nombre avec les plus grandes parties décimales 
-               if(nhaut>0) nh[Bnonint][!idbas] <- ceiling(nh.nonint[Bnonint][!idbas])
-               # Dimminution d'unités si nhaut est un chiffre négatif
-               if (nhaut < 0) nh[Bnonint][rankreste[-1*nhaut]] <- nh[Bnonint][rankreste[-1*nhaut]] - 1
-#               nhaut <- n - sum(nh[A]) - sum(floor(nh.nonint[B])) - T1
-#               nbas <- length(B) - nhaut
-#               reste <- ifelse(nh.nonint[B]>0&nh.nonint[B]<1,1,nh.nonint[B]%%1)
-#               # Si des nh sont < 1 mais supérieur à 0, je les force à être ramené à 1
-#               rankreste <- rank(reste,ties.method="first")
-#               idbas <- rankreste%in%(1:nbas)
-#               # Arrondissement vers le bas pour les nbas nombre avec les plus petites parties décimales 
-#               if(nbas>0) nh[B][idbas] <- floor(nh.nonint[B][idbas])
-#               # Arrondissement vers le haut pour les nhaut nombre avec les plus grandes parties décimales 
-#               if(nhaut>0) nh[B][!idbas] <- ceiling(nh.nonint[B][!idbas])
-          }                                        
-     }     
-     out <- list(nh=nh,nh.nonint=nh.nonint)
+     nh <- getnhr(nhnonint=nh.nonint, findn=findn, n=n, L=L, Nh=Nh, takenone=length(A), takeall=length(C))
+     out <- list(nh=nh, nh.nonint=nh.nonint)
      return(out)
 }
 
@@ -456,7 +478,7 @@ function(findn,n,CV,q1,q2,q3,bias.penalty,B,C,rh,Nh,VYh,TY,TAY,T1,ah,gammah)
         opti <- T1 + U/V      # n  
      } else {
         V <- NULL
-        opti = sqrt(V2 + (U / (n - T1)) - V3 - V4) / TY     # RRMSE
+        opti = sqrt(max(0, V2 + (U / (n - T1)) - V3 - V4)) / TY     # RRMSE
      }
      out <- list(U=U,U1=U1,U2=U2,V=V,opti=opti)
      # U, U1, U2 et V sont seulement utilisés par l'algo de Sethi dans le calcul des dérivées
@@ -466,7 +488,6 @@ function(findn,n,CV,q1,q2,q3,bias.penalty,B,C,rh,Nh,VYh,TY,TAY,T1,ah,gammah)
 takeallauto <-
 function(nh,Nh,L,A,B,C)
 { # Ajustement automatique pour les strates recensement : on change B et C
-#     newcensus<-sum(ceiling(nh[B])>=Nh[B]|nh[B]<0)  # pourquoi le test nh[B]<0?
      newcensus <- if(all(is.na(nh[B]))) 0 else sum(nh[B]>Nh[B])
      if (newcensus>0&&length(C)<L-1-length(A)) {  
           B<-B[-length(B)]
@@ -475,10 +496,11 @@ function(nh,Nh,L,A,B,C)
      } else valid<-TRUE
      out <- list(B=B,C=C,valid=valid)
      return(out)
-# J'ai changé la condition nh[B])>=Nh[B] pour nh[B])>Nh[B] car on ne veux pas de dépassement. Si nh[B])=Nh[B]
+# J'ai changé la condition nh[B]>=Nh[B] pour nh[B]>Nh[B] car on ne veux pas de dépassement. Si nh[B]=Nh[B]
 # on atteint le CV cible ou le n cible, c'est correct. Ce changement règle certains cas problématiques que j'avais
 # rencontré avec Kozak qui restait pris dans un minimum global à cause d'un ajustement pour strate takeall
-# qui n'avait pas lieu d'être fait (dans premières strates par exemple).
+# qui n'avait pas lieu d'être fait (dans premières strates par exemple). Par contre, ça peut créer des résultats
+# surprenant pour lesquels une strate qui paraît recensement est présente en dessous d'une strate échantillonnée.
 }
 
 bh2nh <- 
@@ -497,10 +519,10 @@ function(xgiven,N,bhfull,findn,n,CV,L,certain,q1,q2,q3,A,B,C,bias.penalty,takeal
      
     valid<-FALSE
     while(!valid) {
-        # Calcul de ah, T1, n (si nécessaire) 
+        # Calcul de ah et T1 
         out.Alloc <- getAlloc(q1,q2,q3,B,C,Nh,Nc,EYh,VYh)
             gammah <- out.Alloc$gammah ; ah <- out.Alloc$ah ; T1 <- out.Alloc$T1
-        if (findn) {
+        if (findn) { # Si on a un CV cible, on doit aussi calculer n :
             out.opti <- optiCriteria(findn,n,CV,q1,q2,q3,bias.penalty,B,C,rh,Nh,VYh,TY,TAY,T1,ah,gammah)
             n <- out.opti$opti
         }       
@@ -516,186 +538,40 @@ function(xgiven,N,bhfull,findn,n,CV,L,certain,q1,q2,q3,A,B,C,bias.penalty,takeal
        } else valid<-TRUE
     }
     
-    # Calcul du critère à optimiser (napprox ou RRMSEapprox)
-    if (findn) {
-        opti <- n
-    } else {
-        out.opti <- optiCriteria(findn,n,CV,q1,q2,q3,bias.penalty,B,C,rh,Nh,VYh,TY,TAY,T1,ah,gammah)
-        opti <- out.opti$opti
-    }  
-
-    # Pour le calcul du RRMSE avec les nh entiers
-    nh[B] <- pmax(pmin(nh[B],Nh[B]),0) # dernier ajustement , avant c'était pmax(pmin(nh[B],Nh[B]),1)
+    # Dernier ajustement dans l'arrondissement des nhnonint (utile seulement si takeall.adjust=FALSE)
+    nh[B] <- pmin(nh[B],Nh[B]) 
+    
+    # Pour le calcul des statMSEbias avec les nh entiers
     if (all(is.na(nh[B]))) {
-             warning("nh values for the takesome strata cannot be calculated because all takesome strata variances are null and q3 is nonzero")
+      warning("nh values for the takesome strata cannot be calculated because all takesome strata variances are null and q3 is nonzero")
     } else {
-          if(all(nh[B]==0)) {
-               if(all(VYh[B]==0)) { # Si CV cible + toutes les variances takesome sont nulles -> tous les nh takesome seront nuls
-                    warning("nh values for the takesome strata are all null because all takesome strata variances are null, therefore the RRMSE cannot be calculated")
-               } else if(all(nh.nonint[B]<0)) {
-                    warning("nh.nonint values for the takesome strata are all negative and the corresponding nh have been rounded to zero, therefore the RRMSE cannot be calculated")
-               } else {
-                    warning("nh values for the takesome strata are all null, therefore the RRMSE cannot be calculated")
-               }
-          } else if (any(nh[B]==0)) {
-               warning("some nh are null, possibly because of zero stratum variances and nonzero q3, therefore the RRMSE cannot be calculated")
-          }   
+      if(all(nh[B]==0)) {
+        if(all(VYh[B]==0)) { # Si CV cible + toutes les variances takesome sont nulles -> tous les nh takesome seront nuls
+          warning("nh values for the takesome strata are all null because all takesome strata variances are null, therefore the RRMSE cannot be calculated")
+        } else if(all(nh.nonint[B]<0)) {
+          warning("nh.nonint values for the takesome strata are all negative and the corresponding nh have been rounded to zero, therefore the RRMSE cannot be calculated")
+        } else {
+          warning("nh values for the takesome strata are all null, therefore the RRMSE cannot be calculated")
+        }
+      } else if (any(nh[B]==0)) {
+        warning("some nh are null, possibly because of zero stratum variances and nonzero q3, therefore the RRMSE cannot be calculated")
+      }   
     }
-    out.RMSE <- RMSE(bias.penalty,TAY,Nh,VYh,nh,rh,B,C,TY)
-          se <- out.RMSE$se ; prop <- out.RMSE$prop ; bias <- out.RMSE$bias
+    out.MSEbias <- statMSEbias(bias.penalty,TAY,Nh,VYh,nh,rh,B,C,TY)
+        se <- out.MSEbias$se ; prop <- out.MSEbias$prop ; bias <- out.MSEbias$bias
+    
+    # Calcul du critère à optimiser avec les nh et avec les nhnonint
+    if (findn) {
+        opti.nhnonint <- n
+        opti.nh <- sum(nh)
+    } else {
+        opti.nhnonint <- RMSE(bias.penalty=bias.penalty, TAY=TAY, Nh=Nh, VYh=VYh, nh=nh.nonint, rh=rh, B=B, C=C)/TY
+        opti.nh <- RMSE(bias.penalty=bias.penalty, TAY=TAY, Nh=Nh, VYh=VYh, nh=nh, rh=rh, B=B, C=C)/TY   
+    }  
     
     # Sortie des résultats
-    out<-list(Nh=Nh,Nc=Nc,EYh=EYh,EYc=EYc,VYh=VYh,nh=nh,nh.nonint=nh.nonint,TY=TY,se=se,bias=bias,prop=prop,opti=opti,stratumID=stratumID,C=C)
+    out<-list(Nh=Nh, Nc=Nc, EYh=EYh, EYc=EYc, VYh=VYh, nh=nh, nh.nonint=nh.nonint, TY=TY, se=se, 
+              bias=bias, prop=prop, opti.nh=opti.nh, opti.nhnonint=opti.nhnonint, 
+              stratumID=stratumID, C=C)
     return(out)
 }
-
-
-########################################################################################################################
-## 15 février 2010
-## Nouvelle approche : plus de checkNh et checknh car il n'est pas facile de créer
-## des fonctions rapides qui modifient bien les bornes. Ça demanderait plus de temps
-## et de réflexion pour bien faire ces fonctions et ce n'est vraiment pas une priorité.
-## À partir de maintenant, si les bornes initiales ne vérifient pas les conditions, on les
-## modifient pour les bornes par défaut qui sont les plus robustes. Si ces bornes ne rencontrent
-## pas les conditions, aucunes bornes ne le peuvent. Si on a laissé tomber un argument initbh
-## fournit par l'utilisateur afin d'utiliser les bornes par défaut, un message d'avis est affiché.
-
-## Si jamais je reprend mon travail sur ces fonctions:
-## Voici où en étaient mes réflexions :
-## Les deux algo checkNh et checknh devraient avoir le même objectif : se repprocher le plus possible
-## des bornes par défaut robustes. Ils seraient donc basés sur une même fonction, qui serait simplement
-## roulée plus longtemps si checkNh roule, devient ok, mais checknh n'est toujours pas ok.
-## À chaque étape je déplace un x1 de la strate la plus en surplus vers la strate la plus en déficit
-## en favorisant la diminutions des strates takenone, puis takeall. Si plusieurs strates ont le même déficit,
-## je prendrais le plus petit i car on préfère que les premières strates takesome soient plus grandes
-## que les dernières. On prendrait la ou les unités (en cas d'égalités) à déplacer dans la strate 1- takenone,
-## 2 - takeall, 3- la plus en surplus par rapport à son N1h cible. 
-
-## idée : enregistrer l'historique + ajouter argument check.trace pour savoir si l'utilisateur
-## veut voir ça dans la sortie. Pour moi, ce serait utile en cours de travail afin de mieux
-## comprendre mon programme.
-
-## idée : faire en C car ça risque d'être long à rouler.
-
-########### inutilisé à partir du 15 fev 2010 #################
-## Cette fonction était seulement utilisée pas checkNh et je n'ai plus besoin de cette
-## fonction. En conséquence, getNh n'est plus utilisé.
-`getNh` <-
-function(pbh,L,wtx1,N1)
-{ # simply calculates Nh, the number of units in each stratum, 
-  # using the stratum boundaries expressed in terms of data rank (pbh)  
-    resuC <- .C("getNhC",as.integer(pbh),as.integer(L),as.integer(wtx1),as.integer(N1),Nh=as.integer(rep(0,L)),PACKAGE="stratification")
-    return(resuC$Nh)
-  # code possible en R : beaucoup plus long!
-    #fac <- c(rep(1:(L-1),pbh-c(1,pbh[-(L-1)])),rep(L,N1-pbh[L-1]+1))
-    #fac <- factor(fac,levels=1:L)
-    #Nh <- tapply(wtx1,list(stratum=fac),sum)
-
-}
-
-########### inutilisé à partir du 15 fev 2010 #################
-## problème : les bornes cibles ne sont pas infaillibles ##
-`checkNh` <-
-function(x1,wtx1,bh,Ls,minNh,takenone=0)
-{ # Verifies that every strata, except the take-none stratum if present, contains at least minNh units.
-  # If not, the boundaries are modified in order to respect this condition (that's the real purpose of the function).
-  # This function is used only on the initial strata boundaries.
-  # Inside the C code for Kozak's algorithm, the verification Nh>=minNh is done for each set of strata boundaries.
-  # In the algorithm, the boundaries are not changed if they don't respect the condition. They are simlpy discarded.  
-    L <- Ls + takenone
-    N1 <- length(x1)
-    pbh <- vector(length=L-1)
-    for (i in 1:(L-1)) {
-        dif <- x1-bh[i]
-        pbh[i] <- length(dif[dif<0])+1
-    }
-    A<- if(takenone==0) NULL else 1:takenone
-    BC<-(takenone+1):L
-    Nh<-getNh(pbh=pbh,L=L,wtx1=wtx1,N1=N1)
-    detail<-NULL
-    # Modification des Nh au besoin
-    if (any(Nh[A]<0)|any(Nh[BC]<minNh)) {
-        warn<-TRUE
-        # Bornes cibles : répartition la plus possible égale 
-#        bha<-quantile(x,probs=(1:(L-1))/L)
-        bha<-vector(length=L-1)
-        Nhcible <- sum(wtx1)/L
-        revwtx1 <- rev(wtx1) # commencer par les dernière strates car on laisse ce qu'on veut dans la strate takenone
-        nremove <- 0
-        for (i in (L-1):1) {
-            cumul<-cumsum(revwtx1)
-            revpos<-sum(cumul<=Nhcible)
-            if(0==revpos || sum(cumul[1:revpos])<minNh) revpos <- revpos + 1
-            revwtx1 <- revwtx1[-(1:revpos)]
-            nremove <- nremove + revpos
-            pos <- length(x1) - nremove
-            bha[i] <- (x1[pos]+x1[pos+1])/2
-        }
-        pbha<-vector(length=L-1)
-        for (i in 1:(L-1)) {
-            dif<-x1-bha[i]
-            pbha[i]<-length(dif[dif<0])+1
-        }
-        Nha<-getNh(pbh=pbha,L=L,wtx1=wtx1,N1=N1)
-        detail<-matrix(c(bha,Nha,bh,Nh),nrow=2,byrow=TRUE)
-        while (any(Nh[A]<0)|any(Nh[BC]<minNh)){
-            # Identification des bornes à modifier
-            jbh<-0
-            # strates takenone
-            if (isTRUE(takenone>0)) if (Nh[1]<0) jbh<-c(jbh,1) 
-            if (isTRUE(takenone>1)) for (j in 2:A[length(A)]) if (Nh[j]<0) jbh<-c(jbh,j-1,j)
-            # strates takesome ou takeall
-            if (isTRUE(Nh[BC[1]]<minNh)) if (isTRUE(takenone>0)) jbh<-c(jbh,BC[1]-1,BC[1]) else jbh<-c(jbh,1)
-            if (isTRUE(L>(1+takenone))) if (Nh[L]<minNh) jbh<-c(jbh,L-1) 
-            if (isTRUE(L>(2+takenone))) for (j in BC[2]:(L-1)) if (Nh[j]<minNh) jbh<-c(jbh,j-1,j)
-            tab <- table(jbh[-1])
-            jbh <- as.numeric(names(tab))
-            # Sélection de la borne qui sera modifiée, i.e. celle qui est le plus loin de sa borne cible
-            # et modification pour la rapprocher de la borne cible.
-            jmodif <- jbh[order((pbh-pbha)[jbh]^2,decreasing=TRUE)][1]
-            pbh[jmodif] <- if (pbh[jmodif]<pbha[jmodif]) pbh[jmodif]+1 else pbh[jmodif]-1
-            Nh<-getNh(pbh=pbh,L=L,wtx1=wtx1,N1=N1)
-            bh<-pbh2bh(pbh,x1)
-            detail<-rbind(detail,c(bh,Nh))
-        }
-        colnames(detail) <- c(paste("b",1:(L-1),sep=""),paste("N",1:L,sep=""))
-        rownames(detail) <- c("target",0:(nrow(detail)-2))
-    } else warn<-FALSE
-    out<-list(bh=bh,pbh=pbh,warn=warn,detail=detail)
-}
-
-
-########### inutilisé à partir du 15 fev 2010 #################
-## problème : peut proposer des strates avec nh=0 ##
-## raison : on vide takenone et on rend takeall les plus petites possibles
-## mais on arrête là et ce n'est parfois pas suffisant pour s'assurer d'avoir
-## des nh tous >0. Il faudrait aussi modifier les bornes vers des bornes cibles
-## robustes, un peu comme le fait checkNh
-`checknh` <-
-function(x,x1,N,pbh,findn,n,CV,Ls,Nc,EYc,alloc,A,B,C,bias.penalty,rh,model,nmodel,model.control,minNh)
-{ # Verifies that every sampled strata sample size is positive. 
-  # If not, the boundaries are modified in order to respect this condition (that's the real purpose of the function).
-  # This function is used only on the initial strata boundaries.
-  # Inside the C code for Kozak's algorithms, the verification nh>0 is done for each set of strata boundaries.
-  # In the algorithm, the boundaries are not changed if they don't respect the condition. They are simlpy discarded.  
-    bh<-pbh2bh(pbh,x1)
-    calculn<-strata.internal(x=x,N=N,bh=bh,findn=findn,n=n,CV=CV,Ls=Ls,Nc=Nc,EYc=EYc,alloc=alloc,takenone=length(A),
-                             bias.penalty=bias.penalty,takeall=length(C),rh=rh,model=model,model.control=model.control) 
-    L <- Ls + length(A) 
-    # Modification des strates initiales afin d'avoir nh>0 pour toute strate échantillonnée
-    if (any(calculn$nh[c(B,C)]<=0)) {
-        warn<-TRUE
-        # Programmé en C pour que ce soit plus rapide
-        resuC<-.C("checknhC",as.double(x),as.double(x1),as.integer(N),as.integer(findn),as.integer(n),as.double(CV),
-                  as.integer(L),as.integer(Nc),as.double(EYc),as.double(alloc$q1),as.double(alloc$q2),as.double(alloc$q3),
-                  as.integer(length(A)),as.double(bias.penalty),as.integer(length(C)),as.double(rh),
-                  as.integer(nmodel),as.double(model.control$beta),as.double(model.control$sig2),
-                  as.double(model.control$ph),as.double(model.control$gamma),as.double(model.control$epsilon),
-                  as.integer(minNh),as.integer(calculn$Nh),pbh=as.integer(pbh),PACKAGE="stratification")
-        if (all(pbh==resuC$pbh)) stop("some initial nh for sampled strata are <=0 but the initial boundaries cannot be modified automatically: please change the 'initbh' argument")
-        pbh<-resuC$pbh
-    } else warn<-FALSE
-    out<-list(pbh=pbh,warn=warn)
-}
-
-########################################################################################################################

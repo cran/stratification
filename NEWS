@@ -1,3 +1,72 @@
+Changes in Version 2.1-1
+ 
+ o Minor bug fixes in strata.LH.
+ 
+ o The default values for the algorithm parameters in strata.LH have been changed for 
+   values giving typically an equivalent or better solution than the previous default 
+   algorithm parameters. They are now (initbh="nh", maxstep=6, rep="change"). They used
+   to be (initbh="nhnonint", maxstep=3, rep=3). This change affects the execution time of 
+   the function. It is much slower. The next version of the package should improve this.  
+ 
+ o Tests have been included in the new 'tests' subdirectory of the package.
+  
+ o The 'Given arguments' section of the print for an object of class 'strata' has been 
+   improved.
+   
+ o Documentation update. 
+
+
+Changes in Version 2.1-0
+ 
+ o The function RMSE has been renamed statMSEbias and a new function RMSE calculates the 
+   RMSE.
+
+ o To get the stratum sample sizes nh, we first apply an allocation rule to the total 
+   sample size n. The result of applying the allocation rule is non integer stratum 
+   sample sizes, named nh.nonint(or nhnonint). Theses values are rounded to get the 
+   integer nh (see the stratification-package help page for details about the rounding). 
+   The rounding of the stratum sample sizes nhnonint used to be done inside the R internal 
+   function getnh and the C internal function strataC. It is now achieved with an 
+   independant internal function called getnhC and its wrapper in R called getnhr.
+   
+ o The function strata.LH can now use two types of optimization criteria. It uses to 
+   minimize a criteria (criteria=RRMSE for a given n and criteria=n for a given CV) 
+   calculated with the non integer stratum sample sizes nh. The user now has the choice 
+   to calculate the criteria with non integer nh or integer (rounded) nh. This choice is 
+   specified with the new algorithm parameter (element of the list 'algo.control') named 
+   'idopti'. It can take the value "nh" (criteria calculated with integer nh) or "nhnonint" 
+   (criteria calculated with non integer sample sizes nh.nonint).  
+   
+ o The output value opti.criteria has been replaced by two values, opti.nh and opti.nhnonint,
+   for the functions strata.bh, strata.geo, strata.cumrootf (and also bh2nh, the internal 
+   function called by strata.bh and strata.internal, an internal and lighter version of 
+   strata.bh). The value opti.nhnonint is in fact equal to the old opti.criteria. Only the 
+   name has changed. It is still the criteria to optimize calculated with the non integer 
+   stratum sample sizes (nh.nonint). The value opti.nh is the same criteria, but calculated 
+   with the integer sample sizes (nh). For the function strata.LH, the output value 
+   opti.criteria still exists, but its value now depends on the new argument : 'idopti' in 
+   the 'algo-control' list. If idopti="nh", opti.criteria is the criteria to optimize 
+   calculated with the integer nh. If idopti="nhnonint", opti.criteria is the criteria to 
+   optimize calculated with the non integer sample sizes (nh.nonint).
+  
+ 
+Changes in Version 2.0-4
+
+ o A warning is now printed when Kozak's algorithm is not able to move (when it discards
+   every updated boundaries and remains at the initial boundaries).
+
+ o Bug fixes for the extreme case of a null optimization criteria for the initial boundaries.
+   In that case, Kozak's algorithm might not be able to move. Therefore, the initial values 
+   for Nh, nh and nhnonint given to the C function running Kozak's algorithm must be the 
+   values associated to the input boundaries (instead of zero). Also, in the selection of 
+   the best boundaries among the repetitions, null optimization criteria must be discarded.
+
+ o Bug fixes in the internal function optiCriteria and the C function strataC. In extreme 
+   cases, the quantity V2 + (U / (n - T1)) - V3 - V4 could be negative. Therefore, taking 
+   its square root returned NaN, which caused problem later on. This quantity is now 
+   truncated to zero. 
+
+
 Changes in Version 2.0-3
 
  o Useless files have been deleted from the package source.
@@ -9,18 +78,21 @@ Changes in Version 2.0-2
 
  o Bug fixes for the function strata.cumrootf for some rare cases.
 
- o The function var.strata now applies the posterior correction for non-response to the non-integer nh.
+ o The function var.strata now applies the posterior correction for non-response to the 
+   non integer stratum sample sizes.
 
  o The function plot.var.strata now prints correctly the loglinear model parameters.
 
- o The function plot.strata now prints "model = complete enumeration" if a complete enumeration was carried out.
+ o The function plot.strata now prints "model = complete enumeration" if a complete 
+   enumeration was carried out.
 
  o Minor modifications to the documentation.
   
   
 Changes in Version 2.0-1
   
-  o Bug fixes for the function strata.LH concerning the modification of initial stratum boundaries if they do not meet the condition Nh>=minNh and nh>0.
+  o Bug fixes for the function strata.LH concerning the modification of initial stratum 
+    boundaries if they do not meet the condition Nh>=minNh and nh>0.
 
   
 Changes in Version 2.0-0

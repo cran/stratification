@@ -10,8 +10,8 @@ This package contains various functions for univariate stratification of survey 
 \tabular{ll}{
 Package: \tab stratification\cr
 Type: \tab Package\cr
-Version: \tab 2.0-3\cr
-Date: \tab 2011-02-02\cr
+Version: \tab 2.1-1\cr
+Date: \tab 2012-06-29\cr
 License: \tab GPL-2\cr
 }
 
@@ -104,9 +104,11 @@ These functions return the sample sizes \code{nh}, which are integers, but also 
 \author{ Sophie Baillargeon \email{Sophie.Baillargeon@mat.ulaval.ca} and\cr
 Louis-Paul Rivest \email{Louis-Paul.Rivest@mat.ulaval.ca} }
 \references{
-Baillargeon, S. and Rivest, L.-P. (2010). Univariate stratification in R with the package stratification. Paper in progress.
-
 Baillargeon, S., Rivest, L.-P., Ferland, M. (2007). Stratification en enquetes entreprises : Une revue et quelques avancees. \emph{Proceedings of the Survey Methods Section, 2007 SSC Annual Meeting}. \url{ http://www.ssc.ca/survey/documents/SSC2007_S_Baillargeon.pdf }
+
+Baillargeon, S. and Rivest, L.-P. (2009). A general algorithm for univariate stratification. \emph{International Stratification Review}, \bold{77}(3), 331-344.
+
+Baillargeon, S. and  Rivest L.-P. (2011). The construction of stratified designs in R with the package stratification. \emph{Survey Methodology}, \bold{37}(1), 53-65. \url{ http://www.statcan.gc.ca/pub/12-001-x/2011001/article/11447-eng.pdf }
 
 Dalenius, T. and Hodges, J.L., Jr. (1959). Minimum variance stratification. \emph{Journal of the American Statistical Association}, \bold{54}, 88-101.
 
@@ -119,8 +121,6 @@ Kozak, M. (2004). Optimal stratification using random search method in agricultu
 Lavallee, P. and Hidiroglou, M.A. (1988). On the stratification of skewed populations. \emph{Survey Methodology}, \bold{14}, 33-43.
 
 Rivest, L.-P. (2002). A generalization of the Lavallee and Hidiroglou algorithm for stratification in business surveys. \emph{Survey Methodology}, \bold{28}(2), 191-198.
-
-Rivest, L.-P. and Baillargeon, S. (2009). A general algorithm for univariate stratification. \emph{International Stratification Review}, \bold{77}(3), 331-344.
 
 Sethi, V. K. (1963). A note on optimum stratification of populations for estimating the population means. \emph{The Australian Journal of Statistics}, \bold{5}, 20-33.
 }

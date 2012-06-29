@@ -29,8 +29,8 @@ function(strata,y=NULL,rh=strata$args$rh,rh.postcorr=FALSE,model=c("none","logli
     VYh <- ifelse(Nh==0,NA,moments$VYh) ; TY <- moments$TY ; TAY <- moments$TAY
     
     # Pour le calcul du CV
-    out.RMSE <- RMSE(bias.penalty,TAY,Nh,VYh,nh,rh,B,C,TY)
-    se <- out.RMSE$se ; prop <- out.RMSE$prop ; bias <- out.RMSE$bias
+    out.MSEbias <- statMSEbias(bias.penalty,TAY,Nh,VYh,nh,rh,B,C,TY)
+        se <- out.MSEbias$se ; prop <- out.MSEbias$prop ; bias <- out.MSEbias$bias
     
     # Sortie des résultats
     out <- list(nh=nh,n=sum(nh)+Nc,certain.info=c(Nc=Nc,meanc=EYc),meanh=EYh,varh=VYh,mean=TY/N,RMSE=se/N,RRMSE=se/TY,

@@ -23,6 +23,9 @@
   \item{\dots}{ Additional arguments affecting the print or the plot produced. }
 }
 \note{When the object of class "strata" contains a certain stratum, \code{plot.strata} removes from the data the units in this stratum before generating the histogram.}
+\references{
+Baillargeon, S. and  Rivest L.-P. (2011). The construction of stratified designs in R with the package stratification. \emph{Survey Methodology}, \bold{37}(1), 53-65. \url{ http://www.statcan.gc.ca/pub/12-001-x/2011001/article/11447-eng.pdf }
+}
 \author{ Sophie Baillargeon \email{Sophie.Baillargeon@mat.ulaval.ca} and\cr
 Louis-Paul Rivest \email{Louis-Paul.Rivest@mat.ulaval.ca} }
 \seealso{ \code{\link{strata.bh}}, \code{\link{strata.cumrootf}}, \code{\link{strata.geo}}, \code{\link{strata.LH}} }
