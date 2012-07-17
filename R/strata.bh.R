@@ -2,7 +2,7 @@
 function(x,bh,n=NULL,CV=NULL,Ls=3,certain=NULL,alloc=list(q1=0.5,q2=0,q3=0.5),takenone=0,bias.penalty=1,takeall=0,takeall.adjust=FALSE,rh=rep(1,Ls),model=c("none","loglinear","linear","random"),model.control=list())
 {
     # Validation des arguments et initialisation de variables locales
-    xgiven <- N <- findn <-  L <- q1 <- q2 <- q3 <- beta <- sig2 <-  ph <- pcertain <- gamma <- epsilon <- A <- B <- C <- NULL
+    xgiven <- N <- N1 <- findn <-  L <- q1 <- q2 <- q3 <- beta <- sig2 <-  ph <- pcertain <- gamma <- epsilon <- A <- B <- C <- NULL
     out.check <- checkargs(x=x,bh=bh,n=n,CV=CV,Ls=Ls,certain=certain,alloc=alloc,takenone=takenone,bias.penalty=bias.penalty,takeall=takeall,
           takeall.adjust=takeall.adjust,rh=rh,model=model,model.control=model.control)
     for(i in 1:length(out.check)) assign(names(out.check)[i],out.check[[i]])

@@ -3,7 +3,7 @@
         model=c("none","loglinear","linear","random"),model.control=list(),algo=c("Kozak","Sethi"),algo.control=list())
 {
   # Validation des arguments et initialisation de variables locales
-  xgiven <- N <- findn <-  L <- q1 <- q2 <- q3 <- beta <- sig2 <-  ph <- pcertain <- gamma <- epsilon <- NULL
+  xgiven <- N <- N1 <- findn <-  L <- q1 <- q2 <- q3 <- beta <- sig2 <-  ph <- pcertain <- gamma <- epsilon <- NULL
   maxiter <- method <- minNh <- maxstep <- maxstill <- rep <- minsol <- idopti <- A <- B <- C <- NULL
   out.check <- checkargs(x=x,initbh=initbh,n=n,CV=CV,Ls=Ls,certain=certain,alloc=alloc,takenone=takenone,bias.penalty=bias.penalty,
       takeall=takeall,rh=rh,model=model,model.control=model.control,algo=algo,algo.control=algo.control)
@@ -14,7 +14,6 @@
   tab <- table(x)
   x1 <- as.numeric(names(tab))
   wtx1 <- as.numeric(tab)
-  N1 <- length(wtx1)
   
   # test : est-il possible de former Ls strates ayant au moins minNh unités?
 #    wtx1_copy <- if(0==takenone) wtx1 else wtx1[-1] # on veut au moins une unité dans la strate recensement au départ
@@ -232,7 +231,10 @@
         }
       } # fin des répétitions
       
-      repmin <- which.min(ifelse(desc.rep[,1]==0,NA,desc.rep[,1]))
+      reord <- order(ifelse(desc.rep[,"opti.nh"]==0,NA,desc.rep[,"opti.nh"]), 
+                     ifelse(desc.rep[,"opti.nhnonint"]==0,NA,desc.rep[,"opti.nhnonint"]))
+               # min = plus petit opti.nh, en cas d'égalité : plus petit opti.nhnonint  
+      repmin <- reord[1]
       if(length(repmin)==0) {
         warning("Kozak's algorithm has not been able to move from its initial position\n",
             "because initial boundaries lead to a null optimization criteria.\n",

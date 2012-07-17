@@ -1,3 +1,21 @@
+Changes in Version 2.1-2
+ 
+ o The examples in the help pages have been modified a little to insure that they are not 
+   too long to run.
+ 
+ o In version 2.1-1, the default values for the algorithm parameters in strata.LH made
+   the function long to run. They have been modified by values giving almost as often
+   optimal solution and running faster. The default value for the parameter maxstep now 
+   equals 3 for the modifed Kozak's algorithm and pmin(ceiling(N1/15),75) for the 
+   original one, where N1 stands for the number of unique values in the input data. The
+   default value for maxstill now takes into account the value of maxstep. It is 
+   calculated with the command: floor(maxstep*100/3). Also, by default, rep=5 and the 
+   initial stratum boundaries are obtained with the cumulative root frequency method 
+   instead of using default initial boundaries forming strata of equal sizes (arithmetic 
+   boundaries). In the next version of the package, the function strata.LH should be 
+   even faster and give better results with its arguments' default values.
+
+
 Changes in Version 2.1-1
  
  o Minor bug fixes in strata.LH.

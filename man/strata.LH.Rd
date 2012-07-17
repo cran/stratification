@@ -34,11 +34,27 @@ strata.LH(x, initbh, n = NULL, CV = NULL, Ls = 3, certain = NULL,
 }
 \details{
 INITIAL STRATUM BOUNDARIES\cr
-The default value of \code{initbh} is the set of \code{Ls}-1 equidistant points along the range of the \eqn{X}-values (arithmetic starting points of Gunning and Horgan (2007)). Let's define \eqn{d=(max(X)-min(X))/Ls}, the default initial boundaries are \eqn{b_h = min(X) + h \times d}{bh = min(X) + h x d} for \eqn{h=1,\ldots,Ls-1}. 
+%The default value of \code{initbh} is the set of \code{Ls}-1 equidistant points along the range of the \eqn{X}-values 
+%(arithmetic starting points of Gunning and Horgan (2007)). Let's define \eqn{d=(max(X)-min(X))/Ls}, the default initial
+% boundaries are \eqn{b_h = min(X) + h \times d}{bh = min(X) + h x d} for \eqn{h=1,\ldots,Ls-1}. 
+The default initial boundaries \code{initbh} are obtained with the function \code{\link{strata.cumrootf}}
+(cumulative root frequency method). 
 
-If \code{takenone}=1 and \code{initbh} is of size \code{Ls}-1, the initial boundary of the take-none stratum is set to the first percentile of \code{x}. If this first percentile is equal to the minimum value of \code{x}, this initial boundary would lead to an empty take-none stratum. In that case, the initial boundary of the take-none stratum is rather set to the second smallest value of \code{x}.
+If \code{takenone}=1 and \code{initbh} is of size \code{Ls}-1, the initial boundary of the take-none stratum is set to 
+the first percentile of \code{x}. If this first percentile is equal to the minimum value of \code{x}, this initial 
+boundary would lead to an empty take-none stratum. In that case, the initial boundary of the take-none stratum is 
+rather set to the second smallest value of \code{x}.
 
-Sometimes, the specified initial boundaries are not suitable for Kozak's algorithm. As written below, this algorithm verifies at each iteration that the sampled strata contains at least \code{minNh} units and that they have positive sample sizes \eqn{n_h}{nh}. If the initial boundaries do not meet these conditions, the algorithm might not be able to change the boundaries at all because any change would be rejected for failing to meet the conditions. Therefore, in such a situation, the specified initial boundaries are replaced by robust boundaries. The robust boundaries give an empty take-none stratum if such a stratum is requested, take-all strata as small as possible, and take-some strata with approximately the same number of unique \eqn{X}-values. The sampled strata given by the robust boundaries contain at least \code{minNh} units. These robust boundaries give, in most situation, a non-negative optimization criteria \eqn{n} if a target \code{CV} is requested (see Rivest and Baillargeon 2009 for a discussion of possible negative \eqn{n} values).\cr  
+Sometimes, the specified initial boundaries are not suitable for Kozak's algorithm. As written below, this algorithm 
+verifies at each iteration that the sampled strata contains at least \code{minNh} units and that they have positive 
+sample sizes \eqn{n_h}{nh}. If the initial boundaries do not meet these conditions, the algorithm might not be able 
+to change the boundaries at all because any change would be rejected for failing to meet the conditions. Therefore, 
+in such a situation, the specified initial boundaries are replaced by robust boundaries. The robust boundaries give 
+an empty take-none stratum if such a stratum is requested, take-all strata as small as possible, and take-some strata 
+with approximately the same number of unique \eqn{X}-values. The sampled strata given by the robust boundaries contain 
+at least \code{minNh} units. These robust boundaries give, in most situation, a non-negative optimization criteria 
+\eqn{n} if a target \code{CV} is requested (see Rivest and Baillargeon 2009 for a discussion of possible negative 
+\eqn{n} values).\cr  
 
 ALGORITHMS\cr
 \bold{Sethi:} The formulas implemented for Sethi's algorithm are presented in Baillargeon, Rivest and Ferland (2007).\cr
@@ -67,11 +83,14 @@ The \code{algo.control} argument is a list to supply any of the following parame
   \item{\code{minNh}}{ A numeric for Kozak's algorithms only: the minimum number of units required in each sampled stratum (no 
                        restriction is put on the take-none stratum, if included). \code{minNh} must be greater or equal to 2, 
                        which is the default. }
-  \item{\code{maxstep}}{ A numeric for Kozak's algorithms only: the maximal step. The default is 6. }
+  \item{\code{maxstep}}{ A numeric for Kozak's algorithms only: the maximal step. The default is 3 for the modified Kozak's algorithm
+                         and \code{pmin(ceiling(N1/15),75)} for the original Kozak's algorithm, where N1 stands for the number of 
+                         unique values in the input data. }
   \item{\code{maxstill}}{ A numeric for the original Kozak's algorithm only: the maximal number of iterations without a change in 
-                          the boundaries. The default is 100.}
-  \item{\code{rep}}{ A numeric for Kozak's original algorithm only: the number of repetitions of the algorithm. 
-                     This argument can be given the special value \code{"change"} (its default value). 
+                          the boundaries. The default is \code{floor(maxstep*100/3)}.}
+  \item{\code{rep}}{ A numeric for Kozak's original algorithm only: the number of repetitions of the algorithm.
+                     The default is 5. 
+                     This argument can be given the special value \code{"change"}. 
                      If \code{rep="change"} the algorithm is repeated 
                      3 times for 9 combinations of initial boundaries and \code{maxstep} values. The initial boundaries used are the 
                      cumulative root frequency boundaries, the geometric boundaries or the default initial boundaries. The 
@@ -150,125 +169,121 @@ Sethi, V. K. (1963). A note on optimum stratification of populations for estimat
 Louis-Paul Rivest \email{Louis-Paul.Rivest@mat.ulaval.ca} }
 \seealso{ \code{\link{print.strata}}, \code{\link{plot.strata}}, \code{\link{strata.cumrootf}}, \code{\link{strata.geo}} }
 \examples{
-### These examples have temporarily been put in comments because they were too
-### long to run. The situation will be fixed in the next package update.
-#
-##########################################################
-#### Sethi's algorithm versus Kozak's algorithm
-#
-## LACK OF CONVERGENCE
-## Here is an example of numerical difficulties met with Sethi but not with Kozak  
-#data(UScities)
-#Sethi<-strata.LH(x=UScities,CV=0.01,Ls=3,alloc=c(0.35,0.35,0),takenone=0,takeall=1,
-#    rh=1,model="loglinear",model.control=list(beta=1,sig2=0.5,ph=0.85),algo="Sethi",
-#    algo.control=list(maxiter=20))
-#Sethi
-#Sethi$iter.detail[1:5,]
-#Kozak<-strata.LH(x=UScities,CV=0.01,Ls=3,alloc=c(0.35,0.35,0),takenone=0,takeall=1,
-#    rh=1,model="loglinear",model.control=list(beta=1,sig2=0.5,ph=0.85),algo="Kozak")
-#Kozak
-#Kozak$iter.detail[Kozak$iter.detail[,"rep"]==Kozak$rep.min,]
-## Looking at the iteration history for the optimization with Sethi and Kozak, 
-## we see that the initial boundaries are very close from the optimal ones. 
-## Kozak reaches very quickly a minimum. However, Sethi increases n instead of 
-## minimizing it and afterwards it oscillates between two sets of boundaries 
-## without converging.
-#
-## LOCAL MINIMUM
-## In this example, Sethi's algorithm obviously reaches a local minimum since Kozak 
-## proposes a much smaller n.
-#data(UScities)
-#Sethi<-strata.LH(x=UScities,CV=0.01,Ls=4,alloc=c(0.5,0,0),takenone=0,takeall=1,rh=0.85,
-#    model="loglinear",model.control=list(beta=1.1,sig2=0,ph=1),algo="Sethi")
-#Kozak<-strata.LH(x=UScities,CV=0.01,Ls=4,alloc=c(0.5,0,0),takenone=0,takeall=1,rh=0.85,
-#    model="loglinear",model.control=list(beta=1.1,sig2=0,ph=1),algo="Kozak")
-#
-##########################################################
-#### Initial boundaries
-#
-## Sometimes some initial boundaries are better than others. 
-## In the following example, Kozak's algorithm reaches a local minimum with the 
-## geometric initial boundaries. Initial boundaries forming strata of equal sizes
-## (default) allow to reach a much smaller n. 
-#data(Debtors)
-#default<-strata.LH(x=Debtors,CV=0.01,Ls=4,alloc=c(0.5,0,0.5),takenone=0,takeall=1,
-#    rh=1,model="loglinear",model.control=list(beta=1,sig2=0.05,ph=0.85),algo="Kozak")
-#initbh<-strata.geo(x=Debtors,CV=0.01,Ls=4,alloc=c(0.5,0,0.5),rh=1,model="loglinear",
-#    model.control=list(beta=1,sig2=0.05,ph=0.85))$bh
-#geo<-strata.LH(x=Debtors,initbh=initbh,CV=0.01,Ls=4,alloc=c(0.5,0,0.5),
-#    takenone=0,takeall=1,rh=1,model="loglinear",model.control=list(beta=1,
-#        sig2=0.05,ph=0.85),algo="Kozak")
-#
-#
-##########################################################
-#### Take-none stratum
-#
-## As illustrated in the following example, it is sometimes beneficial to include a
-## take-none stratum in the stratified design (possibly with a bias penalty lower than 1).
-#data(Debtors)
-#sans<-strata.LH(x=Debtors,CV=0.05,Ls=3,alloc=c(0.35,0.35,0),takenone=0,
-#    takeall=1,rh=c(0.8,0.9,1),model="loglinear",model.control=list(beta=1.1,
-#        sig2=0,ph=1,ptakenone=1),algo="Kozak")
-#avec<-strata.LH(x=Debtors,CV=0.05,Ls=3,alloc=c(0.35,0.35,0),takenone=1,
-#    takeall=1,rh=c(0.8,0.9,1),model="loglinear",model.control=list(beta=1.1,
-#        sig2=0,ph=1,ptakenone=1),algo="Kozak")
-#avec0.5<-strata.LH(x=Debtors,CV=0.05,Ls=3,alloc=c(0.35,0.35,0),takenone=1,
-#    bias.penalty=0.5,takeall=1,rh=c(0.8,0.9,1),model="loglinear",
-#    model.control=list(beta=1.1,sig2=0,ph=1,ptakenone=1),algo="Kozak")
-#
-## Note: Sethi does not converge here. This occurs often with a take-none stratum.
-#avec.Sethi<-strata.LH(x=Debtors,CV=0.05,Ls=3,alloc=c(0.35,0.35,0),takenone=1,
-#    takeall=1,rh=c(0.8,0.9,1),model="loglinear",model.control=list(beta=1.1,
-#        sig2=0,ph=1,ptakenone=1),algo="Sethi")
-#
-#
-##########################################################
-#### Automatic detection of a take-all stratum
-#
-## As in the following example, a beneficial take-all stratum is not always 
-## detected by the algorithm. Therefore, it is often a good idea to obtain a
-## stratified design with and without a take-all stratum and to compare 
-## the results.
-#data(UScities)
-#sans<-strata.LH(x=UScities,CV=0.01,Ls=3,alloc=c(0.35,0.35,0),takenone=0,takeall=0,
-#    rh=1,model="loglinear",model.control=list(beta=0.9,sig2=0,ph=1),algo="Kozak")
-#sans
-#avec<-strata.LH(x=UScities,CV=0.01,Ls=3,alloc=c(0.35,0.35,0),takenone=0,takeall=1,
-#    rh=1,model="loglinear",model.control=list(beta=0.9,sig2=0,ph=1),algo="Kozak")
-#avec
-#
-#
-##########################################################
-#### Models for the discrepancy between Y and X
-#
-#data(Sweden)
-#
-## LOGLINEAR MODEL WITH MORTALITY: see help(Sweden)
-#
-## HETEROSCEDASTIC LINEAR MODEL:  We fix gamma=2.
-#beta.lin<-mean(Sweden$RMT85/Sweden$REV84)
-#sig2.lin<-var(Sweden$RMT85/Sweden$REV84)
-#strata.LH(x=Sweden$REV84,CV=0.05,Ls=5,alloc=c(0.5,0,0.5),takeall=1,
-#    model="linear",model.control=list(beta=beta.lin,sig2=sig2.lin,gamma=2),
-#    algo="Kozak",algo.control=list(method="modified"))
-## Verification of equation 3.6 of Rivest (2002)
-#beta.log<-1
-#sig2.log<-log(1+sig2.lin/beta.lin^2)
-#strata.LH(x=Sweden$REV84,CV=0.05,Ls=5,alloc=c(0.5,0,0.5),takeall=1,
-#    model="loglinear",model.control=list(beta=beta.log,sig2=sig2.log,ph=1),
-#    algo="Kozak",algo.control=list(method="modified"))
-## The two models give the same stratified design.
-#
-## RANDOM REPLACEMENT MODEL: example in Rivest (1999)
-#strata.LH(x=Sweden$REV84,CV=0.05,Ls=5,alloc=c(0.5,0,0.5),takeall=1,
-#    model="none",algo="Sethi")     # Table 1 with a different rounding of the nh's
-#e0<-strata.LH(x=Sweden$REV84,CV=0.05,Ls=5,alloc=c(0.5,0,0.5),takeall=1,
-#    model="none",algo="Kozak")
-#e0                                    # Better than Sethi
-#var.strata(e0,y=Sweden$RMT85)
-#e0.001<-strata.LH(x=Sweden$REV84,CV=0.05,Ls=5,alloc=c(0.5,0,0.5),takeall=1,
-#    model="random",model.control=list(epsilon=0.011),algo="Kozak")
-#e0.001                         # Table 2 part 3 with a different rounding of the nh's
-#var.strata(e0.001,y=Sweden$RMT85)
+#########################################################
+### Sethi's algorithm versus Kozak's algorithm
+
+# LACK OF CONVERGENCE
+# Here is an example of numerical difficulties met with Sethi but not with Kozak  
+data(UScities)
+Sethi<-strata.LH(x=UScities, CV=0.01, Ls=3, alloc=c(0.35,0.35,0), takenone=0, takeall=1,
+       rh=1, model="loglinear", model.control=list(beta=1, sig2=0.5, ph=0.85), 
+       algo="Sethi", algo.control=list(maxiter=20))
+Sethi
+Sethi$iter.detail[1:5,]
+# Kozak's algorithm with arithmetic initial boundaries 
+# (default initial boundaries for Sethi's algorithm) 
+Kozak<-strata.LH(x=UScities, initbh=c(18,27), CV=0.01, Ls=3, alloc=c(0.35,0.35,0),
+       takenone=0, takeall=1, rh=1, model="loglinear",
+       model.control=list(beta=1, sig2=0.5, ph=0.85), algo="Kozak")
+Kozak
+Kozak$iter.detail[Kozak$iter.detail[,"rep"]==Kozak$rep.min,]
+# Looking at the iteration history for the optimization with Sethi and Kozak, 
+# we see that the initial boundaries are very close from the optimal ones. 
+# Kozak reaches very quickly a minimum. However, Sethi increases n instead of 
+# minimizing it and afterwards it oscillates between two sets of boundaries 
+# without converging.
+
+# LOCAL MINIMUM
+# In this example, Sethi's algorithm obviously reaches a local minimum since Kozak 
+# proposes a much smaller n.
+data(UScities)
+Sethi<-strata.LH(x=UScities, CV=0.01, Ls=4, alloc=c(0.5,0,0), takenone=0, takeall=1, 
+       rh=0.85, model="loglinear", model.control=list(beta=1.1, sig2=0, ph=1),
+       algo="Sethi")
+Sethi
+Kozak<-strata.LH(x=UScities, CV=0.01, Ls=4, alloc=c(0.5,0,0), takenone=0, takeall=1,
+       rh=0.85, model="loglinear", model.control=list(beta=1.1, sig2=0, ph=1),
+       algo="Kozak")
+Kozak
+
+
+#########################################################
+### Take-none stratum
+
+# As illustrated in the following example, it is sometimes beneficial to include a
+# take-none stratum in the stratified design (possibly with a bias penalty lower than 1).
+data(Debtors)
+sans<-strata.LH(x=Debtors, CV=0.05, Ls=3, alloc=c(0.35,0.35,0), takenone=0,
+      takeall=1, rh=c(0.8,0.9,1), model="loglinear", 
+      model.control=list(beta=1.1, sig2=0, ph=1, ptakenone=1), algo="Kozak",
+      algo.control=list(maxstep=50, maxstill=1000, rep=3))
+sans
+avec<-strata.LH(x=Debtors, initbh=sans$bh, CV=0.05, Ls=3, alloc=c(0.35,0.35,0), 
+      takenone=1, takeall=1, rh=c(0.8,0.9,1), model="loglinear",
+      model.control=list(beta=1.1, sig2=0, ph=1, ptakenone=1), algo="Kozak",
+      algo.control=list(maxstep=25, maxstill=500, rep=2))
+avec
+avec0.5<-strata.LH(x=Debtors, initbh=avec$bh, CV=0.05, Ls=3, alloc=c(0.35,0.35,0),
+      takenone=1, bias.penalty=0.5, takeall=1, rh=c(0.8,0.9,1), model="loglinear",
+      model.control=list(beta=1.1, sig2=0, ph=1, ptakenone=1), algo="Kozak",
+      algo.control=list(maxstep=25, maxstill=500, rep=2))
+avec0.5
+
+# Note: Sethi does not converge here. This occurs often with a take-none stratum.
+avec.Sethi<-strata.LH(x=Debtors,CV=0.05,Ls=3,alloc=c(0.35,0.35,0),takenone=1,
+      takeall=1,rh=c(0.8,0.9,1),model="loglinear",model.control=list(beta=1.1,
+      sig2=0,ph=1,ptakenone=1),algo="Sethi")
+avec.Sethi
+
+
+#########################################################
+### Automatic detection of a take-all stratum
+
+# As in the following example, a beneficial take-all stratum is not always 
+# detected by the algorithm. Therefore, it is often a good idea to obtain a
+# stratified design with and without a take-all stratum and to compare 
+# the results.
+data(UScities)
+sans<-strata.LH(x=UScities, CV=0.01, Ls=3, alloc=c(0.35,0.35,0), takenone=0, takeall=0,
+      rh=1, model="loglinear", model.control=list(beta=0.9, sig2=0, ph=1), algo="Kozak")
+sans
+avec<-strata.LH(x=UScities, CV=0.01, Ls=3, alloc=c(0.35,0.35,0), takenone=0, takeall=1,
+      rh=1, model="loglinear", model.control=list(beta=0.9,sig2=0,ph=1), algo="Kozak")
+avec
+
+
+#########################################################
+### Models for the discrepancy between Y and X
+
+data(Sweden)
+
+# LOGLINEAR MODEL WITH MORTALITY: see help(Sweden)
+
+# HETEROSCEDASTIC LINEAR MODEL:  We fix gamma=2.
+beta.lin <- mean(Sweden$RMT85/Sweden$REV84)
+sig2.lin <- var(Sweden$RMT85/Sweden$REV84)
+strata.LH(x=Sweden$REV84, CV=0.05, Ls=5, alloc=c(0.5,0,0.5), takeall=1,
+       model="linear", model.control=list(beta=beta.lin, sig2=sig2.lin, gamma=2),
+       algo="Kozak", algo.control=list(method="modified"))
+# Verification of equation 3.6 of Rivest (2002)
+beta.log <- 1
+sig2.log <- log(1+sig2.lin/beta.lin^2)
+strata.LH(x=Sweden$REV84, CV=0.05, Ls=5, alloc=c(0.5,0,0.5), takeall=1,
+       model="loglinear", model.control=list(beta=beta.log, sig2=sig2.log, ph=1),
+       algo="Kozak", algo.control=list(method="modified"))
+# The two models give the same stratified design.
+
+# RANDOM REPLACEMENT MODEL: example in Rivest (1999)
+strata.LH(x=Sweden$REV84, CV=0.05, Ls=5, alloc=c(0.5,0,0.5), takeall=1,
+       model="none", algo="Sethi")     # Table 1 with a different rounding of the nh's
+e0 <- strata.LH(x=Sweden$REV84, CV=0.05, Ls=5, alloc=c(0.5,0,0.5), takeall=1,
+       model="none", algo="Kozak")
+e0                                    # Better than Sethi
+var.strata(e0, y=Sweden$RMT85)
+e0.001 <- strata.LH(x=Sweden$REV84, CV=0.05, Ls=5, alloc=c(0.5,0,0.5), takeall=1,
+       model="random", model.control=list(epsilon=0.011), algo="Kozak")
+e0.001                         # Table 2 part 3 with a different rounding of the nh's
+var.strata(e0.001 ,y=Sweden$RMT85)
+
 }
 \keyword{ survey }

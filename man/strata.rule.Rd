@@ -67,10 +67,12 @@ Louis-Paul Rivest \email{Louis-Paul.Rivest@mat.ulaval.ca} }
 \examples{
 ### Example for strata.cumrootf
 data(MRTS)
-res<-NULL
-for ( n in seq(100,1500,10)){
-    cum<-strata.cumrootf(x=MRTS,nclass=n,CV=0.01,Ls=4,alloc=c(0.5,0,0.5))
-    res<-rbind(res,c(n,cum$n))
+res <- matrix(NA, nrow=39, ncol=2)
+i <- 1
+for ( n in seq(100,2000,50)){
+    cum <- strata.cumrootf(x=MRTS,nclass=n,CV=0.01,Ls=4,alloc=c(0.5,0,0.5))
+    res[i,] <- c(n,cum$n)
+    i <- i + 1
 }
 plot(res,ylab="suggested sample size n",xlab="number of classes",main=expression(
      paste("Example of the effect of nclass on n for the cum",sqrt(f)," method")))

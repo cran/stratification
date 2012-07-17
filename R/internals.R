@@ -40,11 +40,12 @@ if (!missing(Ls)) {
 
 if (!missing(x)) {
     out$xgiven <- x
-    out$x <- sort(x)
-    out$N <- length(x)
     if (!(is.vector(x)&&is.numeric(x))) stop("'x' must be a numeric vector")
     if (any(x<0)) stop("'x' must take non-negative values only")
-    if (length(unique(x))<Ls) stop("it is impossible to form Ls strata containing at least one unit with the given 'x'")
+    out$x <- sort(x)
+    out$N <- length(x)
+    out$N1 <- length(unique(x))
+    if (out$N1 < Ls) stop("it is impossible to form Ls strata containing at least one unit with the given 'x'")
 }
 
 if (!missing(n)) {
@@ -164,34 +165,41 @@ if(!missing(rh)) { ### dépend de ptakenone
     if (!is.null(ptakenone)) out$rh<-c(NA,out$rh)
 }
 
+if (!missing(algo)) {
+  if (!(algo[1]%in%c("Kozak","Sethi"))) stop("'algo' must be the character string 'Kozak' or 'Sethi'")
+  if("Sethi"==algo[1]) {
+    arret1 <- if(missing(CV)) { TRUE } else { if(is.null(CV)) TRUE else FALSE }
+    if(arret1) stop("To perform stratification minimizing RRMSE, please use Kozak's algorithm. In this package, Sethi's algorithm can only be used to perform stratification minimizing sample size.")
+    if(out$model%in%c("linear","random")) stop("To take into account a 'linear' or 'random' model between X and Y, please use Kozak's algorithm. In this package, Sethi's algorithm can only be used with no model or with the loglinear model.")
+  } 
+  out$algo <- algo[1]
+}
+
 if (!missing(initbh)) {
-# En commentaires : méthode envisagée mais mise de côté
+#c# En commentaires : méthode envisagée mais mise de côté
   change <- if (missing(algo.control)) FALSE else { if (is.null(algo.control$rep)) FALSE else { if(algo.control$rep=="change") TRUE else FALSE } }
-  out$initbh <-  if(is.null(initbh)||change) quantile(out$x,probs=(1:(Ls-1))/Ls) else initbh
-#  out$initbh <- initbh
-#  if(!is.null(out$initbh)) {
-  if ((length(out$initbh)==Ls-1)&&(takenone==1)) {
+  out$initbh <-  if(is.null(initbh) && out$algo=="Kozak"){
+    # À l'origine, les bornes initiales par défaut étaient toujours les bornes arithmétiques
+    # À partir du 16 juillet 2012, ce sont plutôt les bornes cumrootf pour l'algo de Kozak
+    strata.cumrootf(x=out$x, nclass=min(Ls*15, out$N1), CV=0.05, Ls=Ls)$bh
+  } else if((is.null(initbh) && out$algo=="Sethi") || change) {
+    # Bornes arithmétiques
+    quantile(out$x, probs=(1:(Ls-1))/Ls)
+  } else initbh
+#c#  out$initbh <- initbh
+#c#  if(!is.null(out$initbh)) {
+  if ((length(out$initbh)==Ls-1) && (takenone==1)) {
     b1<-quantile(out$x,probs=0.01)
     if (b1==min(out$x)) b1<-unique(out$x)[2]
-    out$initbh <- c(b1,out$initbh)
-#    out$initbh <- c(min(out$x),out$initbh)
+    out$initbh <- sort(c(b1,out$initbh))
+#c#    out$initbh <- c(min(out$x),out$initbh)
   }
-  if (!((length(out$initbh)==Ls+takenone-1)&&is.numeric(out$initbh))) stop("'initbh' must be a numeric vector of length Ls+takenone-1 or Ls-1")
-#    }
+  if (!((length(out$initbh)==Ls+takenone-1) && is.numeric(out$initbh))) stop("'initbh' must be a numeric vector of length Ls+takenone-1 or Ls-1")
+#c#    }
 }
 
 if (!missing(bh)) {
     if (!((length(bh)==Ls+takenone-1)&&is.numeric(bh))) stop("'bh' must be a numeric vector of length Ls+takenone-1")
-}
-
-if (!missing(algo)) {
-    if (!(algo[1]%in%c("Kozak","Sethi"))) stop("'algo' must be the character string 'Kozak' or 'Sethi'")
-    if("Sethi"==algo[1]) {
-          arret1 <- if(missing(CV)) { TRUE } else { if(is.null(CV)) TRUE else FALSE }
-          if(arret1) stop("To perform stratification minimizing RRMSE, please use Kozak's algorithm. In this package, Sethi's algorithm can only be used to perform stratification minimizing sample size.")
-          if(out$model%in%c("linear","random")) stop("To take into account a 'linear' or 'random' model between X and Y, please use Kozak's algorithm. In this package, Sethi's algorithm can only be used with no model or with the loglinear model.")
-    } 
-    out$algo <- algo[1]
 }
 
 if (!missing(algo.control)) {
@@ -209,10 +217,12 @@ if (!missing(algo.control)) {
     out$minsol <- if(is.null(algo.control$minsol)) 1000 else algo.control$minsol
     out$idopti <- if(is.null(algo.control$idopti)) "nh" else algo.control$idopti
     out$minNh <- if(is.null(algo.control$minNh)) 2 else algo.control$minNh
-    out$maxstep <- if(is.null(algo.control$maxstep)) 6 else algo.control$maxstep
-    out$maxstill <- if(is.null(algo.control$maxstill)) 100 else algo.control$maxstill
+    out$maxstep <- if(is.null(algo.control$maxstep)) {
+          if( out$method=="modified") 3 else pmin(ceiling(out$N1/15),75) 
+    } else algo.control$maxstep
+    out$maxstill <- if(is.null(algo.control$maxstill)) floor(out$maxstep*100/3) else algo.control$maxstill
     out$rep <- if(is.null(algo.control$rep)) {        
-      if( out$method=="modified") 1 else "change"
+      if( out$method=="modified") 1 else 5
     } else algo.control$rep
     #r# Mis de côté :
     #r# utile seulement si je veux arrêter les répétitions après un certain nombre de répétitions identiques
