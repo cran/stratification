@@ -1,71 +1,179 @@
+Changes in Version 2.2-2
+
+ o The argument 'initbh' in strata.LH() and the argument 'nclass' in strata.cumrootf() have
+   been changed position.
+
+ o The behaviour of Kozak's algorithm for exception cases have been improved (warning 
+   generated, NaN values in the output and the print).
+
+ o Changes in parameter default values:
+    o 'takeall.adjust' in strata.bh() is now TRUE by default, which is more consistent
+      with the rest of the package;
+    o the 'minsol' element in 'algo.control' now has the default value 10 000 instead of 
+      1000 since the complete enumeration is now coded in C, thus it runs faster;
+    o the 'maxstep' element in 'algo.control' now has a larger default value: \code{Nu/10}, 
+      rounded up and truncated to 100 (Nu is the number of unique values in the x-vector 
+      from which units in the certainty stratum, if any, have been removed);
+    o the 'maxstill' element in 'algo.control' now has a smaller default value because
+      it was unnecessarily large (which increased Kozak's algorithm computational time):
+      new default = maxstep*10, bounded between 50 and 500.
+
+ o In Kozak's algorithm, the value of 'maxstep' and 'maxstill' are now brought down to 3 
+   and 50, respectively, when new boundaries are accepted under certain circumstances
+   (see help(strata.LH)). It allows the algorithm to run much faster because it needs 
+   less iterations to converge.
+
+ o Sethi's algorithm: when a non requested take-all stratum appears at the end of the 
+   algorithm run, the algorithm is run again starting from the boundaries at the end of
+   the preceding run instead of starting at 'initbh'.
+
+ o Changes in strata.LH() output values:
+    o run.min, niter and sol.min can now be vectors because more than one run of the
+      algorithm and, less frequently, more than one possible sets of boundaries can lead 
+      to the optimal solution.
+
+ o General changes in the output values:
+    o nh.nonint has been renamed nhnonint.
+
+ o A vignette has been added in the package.
+
+ o var.strata() now returns nhnonint.
+
+ o Correction of an error introduced in version 2.2-0 in the calculation of the output
+   values relativebias and propbiasMSE.
+
+ o The option 'trymany=TRUE' have been improved.
+
+ o The arguments 'takeall' and 'takenone' can now be logical objects.
+
+
+Changes in Version 2.2-1  (non public version)
+
+ o Bug fixes for the exception cases of null stratum variances and takeall stratum larger 
+   than a target n.
+
+
+Changes in Version 2.2-0  (non public version)
+
+ o Major code restructuring. Some features originally coded in R have been translated in C 
+   to make strata.LH() faster.
+
+ o By default, strata.LH() runs Kozak's algorithm with three different sets of initial
+   boundaries: cumulative root frequency, geometric and robust ones. This option is 
+   controlled with the new 'algo.control' element 'trymany' (see help(strata.LH) for more 
+   information). This default behaviour helps getting good and consistent results. Before 
+   this version, it was problematic to have a default behaviour running the algorithm many 
+   times because it was long to run. It can now run pretty quickly because of the code
+   improvement done.
+
+ o The modified Kozak's algorithm, which is a non-random version of Kozak's algorithm, is 
+   no more available because it never performed as well as the original Kozak's algorithm 
+   in our numerical experiments. Therefore, the 'algo.control' element 'method' has been 
+   dropped.
+
+ o For Kozak's algorithm, when initial boundaries do not meet the conditions Nh >= minNh 
+   and nh>0, they are not replaced by robust boundaries anymore. Instead, a warning is
+   printed and the algorithm is not run.
+
+ o Changes in strata.LH() output values:
+    o the output value initbh has been removed (one can see which initial boundaries has
+      been used in the output value args$initbh);
+    o opti.criteria was always opti.nhnonint, this have been corrected;
+    o rep.detail and rep.min have been renamed run.detail and run.min;
+    o iter.detail, run.detail and sol.detail has been improved: among others, in 
+      sol.detail the boundaries are now obtained by averaging two consecutive unit values 
+      instead of taking the value of a unit;
+    o nsol is now always provided for Kozak's algorithm.
+
+ o General changes in the output values:
+    o the 'args' list output by every public function of the package has been improved;
+    o the elements order has been improved;
+    o the takeall value was sometime incorrect, it has been corrected.
+
+ o Changes in the print of objects of class 'strata':
+    o information about stratum type has been added;
+    o some column names have been shortened in the table;
+    o in the 'Given arguments' section, the algo.control elements have been improved;     
+    o for objects produce with strata.LH() with the option 'trymany=TRUE', the initial
+      boundaries are not printed anymore.
+
+ o Bug fixes concerning the certainty stratum (target n now reached correctly, n includes
+   the certainty stratum).
+
+
 Changes in Version 2.1-2
- 
- o The examples in the help pages have been modified a little to insure that they are not 
-   too long to run.
  
  o In version 2.1-1, the default values for the algorithm parameters in strata.LH made
    the function long to run. They have been modified by values giving almost as often
    optimal solution and running faster. The default value for the parameter maxstep now 
-   equals 3 for the modifed Kozak's algorithm and pmin(ceiling(N1/15),75) for the 
-   original one, where N1 stands for the number of unique values in the input data. The
-   default value for maxstill now takes into account the value of maxstep. It is 
-   calculated with the command: floor(maxstep*100/3). Also, by default, rep=5 and the 
-   initial stratum boundaries are obtained with the cumulative root frequency method 
-   instead of using default initial boundaries forming strata of equal sizes (arithmetic 
-   boundaries). In the next version of the package, the function strata.LH should be 
-   even faster and give better results with its arguments' default values.
+   equals 3 for the modified Kozak's algorithm and pmin(ceiling(Nu/15),75) for the 
+   original one, where Nu stands for the number of unique values in the input data
+   (without considering the units in the certainty stratum). The default value for maxstill 
+   now takes into account the value of maxstep. It is calculated with the command: 
+   floor(maxstep*100/3). Also, by default, rep now equals 5 instead of 3. In the next 
+   version of the package, the function strata.LH should be even faster and give better 
+   results with its arguments' default values.
+
+ o For Kozak's algorithm, the default initial stratum boundaries are now obtained with 
+   the cumulative root frequency method instead of using initial boundaries forming strata 
+   of equal sizes, called arithmetic boundaries (see help(strata.LH) for justifications). 
+   The default value of 'initbh' remains unchanged for Sethi's algorithm.
+   
+ o The way the best repetition of the original Kozak's algorithm is chosen has been
+   improved. If many repetition lead to the same minimal opti.nh criteria, the repetition
+   leading to the smallest opti.nhnonint criteria is chosen.
+
+ o The examples in the help pages have been modified a little to insure that they are not 
+   too long to run. 
 
 
 Changes in Version 2.1-1
- 
- o Minor bug fixes in strata.LH.
  
  o The default values for the algorithm parameters in strata.LH have been changed for 
    values giving typically an equivalent or better solution than the previous default 
    algorithm parameters. They are now (initbh="nh", maxstep=6, rep="change"). They used
    to be (initbh="nhnonint", maxstep=3, rep=3). This change affects the execution time of 
    the function. It is much slower. The next version of the package should improve this.  
- 
- o Tests have been included in the new 'tests' subdirectory of the package.
   
  o The 'Given arguments' section of the print for an object of class 'strata' has been 
    improved.
    
- o Documentation update. 
+ o Minor bug fixes in strata.LH. 
 
 
-Changes in Version 2.1-0
+Changes in Version 2.1-0 (non public version)
  
- o The function RMSE has been renamed statMSEbias and a new function RMSE calculates the 
-   RMSE.
+ o Prior to this version, the optimization criteria (criteria=RRMSE for a given n 
+   and criteria=n for a given CV) was always calculated with non-integer stratum
+   sample sizes, called nhnonint (obtained directly from applying the allocation rule, 
+   see help(stratification)). The output contained integer sample sizes, called nh, but 
+   these were not considered in the optimization criteria calculation. For Kozak's 
+   algorithm, it is now possible to choose which sample sizes are used to calculate
+   the optimization criteria : integer or non-integer ones.
 
- o To get the stratum sample sizes nh, we first apply an allocation rule to the total 
-   sample size n. The result of applying the allocation rule is non integer stratum 
-   sample sizes, named nh.nonint(or nhnonint). Theses values are rounded to get the 
-   integer nh (see the stratification-package help page for details about the rounding). 
-   The rounding of the stratum sample sizes nhnonint used to be done inside the R internal 
-   function getnh and the C internal function strataC. It is now achieved with an 
-   independant internal function called getnhC and its wrapper in R called getnhr.
-   
- o The function strata.LH can now use two types of optimization criteria. It uses to 
-   minimize a criteria (criteria=RRMSE for a given n and criteria=n for a given CV) 
-   calculated with the non integer stratum sample sizes nh. The user now has the choice 
-   to calculate the criteria with non integer nh or integer (rounded) nh. This choice is 
-   specified with the new algorithm parameter (element of the list 'algo.control') named 
-   'idopti'. It can take the value "nh" (criteria calculated with integer nh) or "nhnonint" 
-   (criteria calculated with non integer sample sizes nh.nonint).  
+ o In 'algo.control', the element 'idopti' has been added. This parameter determines which 
+   stratum sample sizes are going to be used to calculate the optimization criteria. 
+   It can take the value "nh" (criteria calculated with the integer sample sizes nh) 
+   or "nhnonint" (criteria calculated with the non-integer sample sizes nhnonint). 
+   The default value is "nh" since it gives slightly better results than idopti="nhnonint"
+   and also because the integer sample sizes are the ones used in practice. This parameter
+   is used by Kozak's algorithms only.
+ 
+ o When a complete enumeration is performed, the criteria is automatically calculated with 
+   integer stratum sample sizes.    
+ 
+ o Because Sethi's algorithm works with derivatives to perform optimization, it can only use
+   a real optimization criteria, i.e. the one calculated with the non-integer sample sizes.    
    
  o The output value opti.criteria has been replaced by two values, opti.nh and opti.nhnonint,
-   for the functions strata.bh, strata.geo, strata.cumrootf (and also bh2nh, the internal 
-   function called by strata.bh and strata.internal, an internal and lighter version of 
-   strata.bh). The value opti.nhnonint is in fact equal to the old opti.criteria. Only the 
-   name has changed. It is still the criteria to optimize calculated with the non integer 
-   stratum sample sizes (nh.nonint). The value opti.nh is the same criteria, but calculated 
-   with the integer sample sizes (nh). For the function strata.LH, the output value 
-   opti.criteria still exists, but its value now depends on the new argument : 'idopti' in 
-   the 'algo-control' list. If idopti="nh", opti.criteria is the criteria to optimize 
-   calculated with the integer nh. If idopti="nhnonint", opti.criteria is the criteria to 
-   optimize calculated with the non integer sample sizes (nh.nonint).
+   for the functions strata.bh(), strata.geo(), strata.cumrootf(). The value opti.nhnonint is in 
+   fact equal to the old opti.criteria. Only the name has changed. It is still the criteria 
+   to optimize calculated with the non integer stratum sample sizes (nhnonint). The value 
+   opti.nh is the same criteria, but calculated with the integer sample sizes (nh). For the 
+   function strata.LH, the output value opti.criteria still exists, but its value now depends 
+   on the new 'algo.control' element 'idopti'. If idopti="nh", opti.criteria is the criteria 
+   to optimize calculated with the integer nh. If idopti="nhnonint", opti.criteria is the 
+   criteria to optimize calculated with the non-integer nhnonint.
   
  
 Changes in Version 2.0-4
@@ -74,10 +182,6 @@ Changes in Version 2.0-4
    every updated boundaries and remains at the initial boundaries).
 
  o Bug fixes for the extreme case of a null optimization criteria for the initial boundaries.
-   In that case, Kozak's algorithm might not be able to move. Therefore, the initial values 
-   for Nh, nh and nhnonint given to the C function running Kozak's algorithm must be the 
-   values associated to the input boundaries (instead of zero). Also, in the selection of 
-   the best boundaries among the repetitions, null optimization criteria must be discarded.
 
  o Bug fixes in the internal function optiCriteria and the C function strataC. In extreme 
    cases, the quantity V2 + (U / (n - T1)) - V3 - V4 could be negative. Therefore, taking 
@@ -92,7 +196,7 @@ Changes in Version 2.0-3
 
 Changes in Version 2.0-2
 
- o Minor correction in plot.strata when a certain stratum is included in the strata object.
+ o Minor correction in plot.strata when a certainty stratum is included in the strata object.
 
  o Bug fixes for the function strata.cumrootf for some rare cases.
 

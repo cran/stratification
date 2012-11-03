@@ -32,20 +32,20 @@ function(x,...)
              cat("\n")
              cat("algo = ", x$args$algo, ": ", sep = "")
              for (i in 1:length(x$args$algo.control)) {
+                 if (i %in% c(5,9)) cat("\n              ")
                  cat(names(x$args$algo.control)[i]," = ",x$args$algo.control[[i]],sep="")
                  if (i<length(x$args$algo.control)) cat(", ")
-                 if (i==4) cat("\n              ")
-               }
+             }
     }
     
     # Section du tableau de stratification
     tableau <- data.frame(x$meanh,x$varh,x$Nh,x$nh,ifelse(x$Nh==0,NA,x$nh/x$Nh))
-    colnames(tableau) <- c("anticip. mean","anticip. var","Nh","nh","fh")
+    colnames(tableau) <- c("E(Y)","Var(Y)","Nh","nh","fh")
     if(!is.null(x$args$certain))
         tableau <- rbind(tableau,c(x$certain.info["meanc"],NA,x$certain.info["Nc"],x$certain.info["Nc"],1))
-    tableau<-rbind(tableau,c(NA,NA,round(sum(tableau$Nh)),round(x$n),x$n/sum(tableau$Nh)))
-    rownames(tableau)<-if(!is.null(x$args$certain)) c(paste("stratum",1:L),"certain","Total") else c(paste("stratum",1:L),"Total")
-    if (identical(as.character(x$call[[1]]),"strata.bh")) {
+    tableau <- rbind(tableau,c(NA,NA,round(sum(tableau$Nh)),round(x$n),x$n/sum(tableau$Nh)))
+    rownames(tableau)<-if(!is.null(x$args$certain)) c(paste("stratum",1:L),"","Total") else c(paste("stratum",1:L),"Total")
+    if (grepl("strata.bh", deparse(x$call[[1]]))) {
         tableau<-cbind("bh"=c(x$args$bh,max(x$args$x)+1,rep(NA,nrow(tableau)-L)),
                        "|"=c(rep("|",nrow(tableau)-1),NA),
                        tableau)
@@ -57,24 +57,33 @@ function(x,...)
         tableau<-cbind("|"=c(rep("|",nrow(tableau)-1),NA),
                        "bh"=c(x$bh,max(x$args$x)+1,rep(NA,nrow(tableau)-L)),
                        tableau)
-        if(!is.null(x$initbh)) tableau<-cbind("initbh"=c(x$initbh,max(x$args$x)+1,rep(NA,nrow(tableau)-L)),tableau)
+        if(is.numeric(x$args$initbh)) 
+          tableau <- cbind("initbh" = c(x$args$initbh, max(x$args$x)+1, rep(NA,nrow(tableau)-L)), tableau)
     }
-    tableau<-cbind("rh"=if(is.null(x$args$certain)) c(rh,NA) else c(rh,1,NA),tableau)
+    rh.tab <- if(is.null(x$args$certain)) c(rh,NA) else c(rh,1,NA)
+    if(takenone>0) rh.tab <- c(rep(NA, length(takenone)), rh.tab)
+    tableau <- cbind("rh" = rh.tab,tableau)
     if (identical(x$args$model,"loglinear"))  tableau<-cbind("ph"=c(ph,NA),tableau)
+    type <- c(rep("take-none", takenone), rep("take-some", x$args$Ls - x$takeall), rep("take-all", x$takeall))
+    tableau <- cbind("|" = c(rep("|", nrow(tableau) - 1), NA),
+                     "type" = if(is.null(x$args$certain)) c(type, NA) else c(type, "certain", NA), 
+                     tableau)
     tableau[,unlist(lapply(tableau,is.numeric))]<-round(tableau[,unlist(lapply(tableau,is.numeric))],2)
 #    tableau[,7:8]<-round(tableau[,ncol(tableau)-2:1],0)
     ### Correction pour affichier correctement les NA
-    tableauc<-format(tableau)
-    for (i in 1:(dim(tableauc)[1]-1)) tableauc[i,] <- ifelse(substr(tableauc[i,],nchar(tableauc[i,])-1,nchar(tableauc[i,]))=="NA","-",tableauc[i,])
-    tableauc[dim(tableauc)[1],] <- ifelse(substr(tableauc[dim(tableauc)[1],],nchar(tableauc[dim(tableauc)[1],])-1,
-                                          nchar(tableauc[dim(tableauc)[1],]))=="NA","",tableauc[dim(tableauc)[1],])
+    tableauc <- format(tableau)
+    substr2last <- function(x) substr(x, nchar(x) -1 , nchar(x))
+    for (i in 1:(nrow(tableauc)-1))
+      tableauc[i,] <- ifelse(substr2last(tableauc[i,]) %in% c("NA", "aN"), "-", tableauc[i,])
+    tableauc[dim(tableauc)[1],] <- ifelse(substr2last(tableauc[dim(tableauc)[1],]) == "NA", "", 
+                                   ifelse(substr2last(tableauc[dim(tableauc)[1],]) == "aN", "-", tableauc[dim(tableauc)[1],]))
     ### Fin de la correction
     cat("\n\nStrata information:\n")
     print(tableauc,na.print="")
     cat("\nTotal sample size:",x$n,"\n")
     cat("Anticipated population mean:",x$mean,"\n")
     
-    # Section sur les moments anticipés
+    # Section sur les moments anticipÃ©s
     sortie <- if (is.null(x$args$takenone)) 1 else { if(0==x$args$takenone) 2 else 3 }
     if (sortie%in%c(1,2)) {
         cat("Anticipated CV:",ifelse(1==sortie,x$CV,x$RRMSE),"\n")
@@ -87,7 +96,7 @@ function(x,...)
         print.default(est, print.gap = 2, quote = FALSE, right=TRUE)
     }
 
-    if (!is.null(x$converge)) { if (!x$converge) cat("\nWarning : the algorithm did not converge.\n") }
+    if (!is.null(x$converge) && !is.na(x$converge)) { if (!x$converge) cat("\nWarning : the algorithm did not converge.\n") }
 }
 
 
@@ -99,7 +108,7 @@ function(x,logscale=FALSE,drop=0,main=paste("Graphical Representation of the Str
     if (!((length(drop)==1)&&isTRUE((drop%%1)==0)&&(isTRUE(drop>=0)||isTRUE(drop<x$Nh[L]))))
         stop("'drop' must be an integer between 0 and 'Nh[L]'-1 inclusively")
     data <- if(is.null(x$args$certain)) sort(x$args$x) else sort(x$args$x[-x$args$certain])     
-    data <- data[1:(length(data)-drop)] # pour enlever les drop données les plus grandes
+    data <- data[1:(length(data)-drop)] # pour enlever les drop donnÃ©es les plus grandes
     if(logscale) data <- log(data)
     bh <- if (identical(as.character(x$call[[1]]),"strata.bh")) x$args$bh else x$bh
     bhfull <- if(logscale) c(min(data),log(bh),max(data)+1) else c(min(data),bh,max(data)+1)
@@ -122,7 +131,7 @@ function(x,logscale=FALSE,drop=0,main=paste("Graphical Representation of the Str
     abline(h=2)
     space <- bhfull[-1]-bhfull[-(L+1)]
     lcert <- (bhfull[L+1]-bhfull[1])/10 # largeur pour la strate certaine
-    off <- (bhfull[L+1]-bhfull[1])*0.04 # offset par défaut pour les axes dans les graphiques en R 
+    off <- (bhfull[L+1]-bhfull[1])*0.04 # offset par dÃ©faut pour les axes dans les graphiques en R 
     if (!is.null(x$args$certain)) space <- c(space[-L],space[L]-lcert,lcert)
     if (any(space<(bhfull[L+1]-bhfull[1])/15)) {
         space <- rep(bhfull[L+1]-bhfull[1]+off*2,L+ncert)/(L+ncert)

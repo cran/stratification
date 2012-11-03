@@ -1,311 +1,227 @@
-`strata.LH` <-
-    function(x,initbh=NULL,n=NULL,CV=NULL,Ls=3,certain=NULL,alloc=list(q1=0.5,q2=0,q3=0.5),takenone=0,bias.penalty=1,takeall=0,rh=rep(1,Ls),
-        model=c("none","loglinear","linear","random"),model.control=list(),algo=c("Kozak","Sethi"),algo.control=list())
+strata.LH <- function(x, n = NULL, CV = NULL, Ls = 3, certain = NULL, 
+                      alloc = list(q1 = 0.5, q2 = 0, q3 = 0.5), takenone = 0, bias.penalty = 1, takeall = 0,
+                      rh = rep(1, Ls), model = c("none", "loglinear", "linear", "random"), model.control = list(),
+                      initbh = NULL, algo = c("Kozak", "Sethi"), algo.control = list())
 {
-  # Validation des arguments et initialisation de variables locales
-  xgiven <- N <- N1 <- findn <-  L <- q1 <- q2 <- q3 <- beta <- sig2 <-  ph <- pcertain <- gamma <- epsilon <- NULL
-  maxiter <- method <- minNh <- maxstep <- maxstill <- rep <- minsol <- idopti <- A <- B <- C <- NULL
-  out.check <- checkargs(x=x,initbh=initbh,n=n,CV=CV,Ls=Ls,certain=certain,alloc=alloc,takenone=takenone,bias.penalty=bias.penalty,
-      takeall=takeall,rh=rh,model=model,model.control=model.control,algo=algo,algo.control=algo.control)
-  for(i in 1:length(out.check)) assign(names(out.check)[i],out.check[[i]])
+  ### Fonction externe : voir fiche d'aide pour la documentation
   
-  Ai <- A;  Bi <- B;  Ci <- C; # regroupements initiaux à conserver car je les reprends à chaque nouvelle répétition de l'algo
-  desc.iter<-NULL
-  tab <- table(x)
-  x1 <- as.numeric(names(tab))
-  wtx1 <- as.numeric(tab)
+  # Validation des arguments, reformatage de certains arguments et initialisation de variables :
+  call.ext <- match.call()
+  out <- valid_args(obj_fct = as.list(environment()), call.ext)
+  # Variables gÃ©nÃ©rales
+  N <- out$N; findn <- out$findn; L <- out$L; rhL <- out$rhL; 
+  # Arguments possiblement reformatÃ©s (si donnÃ©s sous forme logique, ramenÃ©s au type numÃ©rique)
+  takenone <- out$takenone; takeall <- out$takeall;
+  # Variables relatives Ã  la strate certain
+  certain <- out$certain; xnoc <- out$xnoc; Nc <- out$Nc; Nnoc <- out$Nnoc; N1noc <- out$N1noc;
+  # Variables relatives Ã  l'allocation
+  q1 <- out$q1; q2 <- out$q2; q3 <- out$q3;
+  # Variables relatives au model
+  nmodel <- out$nmodel; beta <- out$beta; sig2 <- out$sig2; ph <- out$ph; pcertain <- out$pcertain; 
+  gamma <- out$gamma; epsilon <- out$epsilon;
+  # Variable pour la sortie : liste des arguments
+  args <- out$args;
+  # Variables propres Ã  strata.Lh
+  algo <- out$algo; maxiter <- out$maxiter; minsol <- out$minsol; idopti <- out$idopti; minNh <- out$minNh; 
+  maxstep <- out$maxstep; maxstill <- out$maxstill; rep <- out$rep; trymany <- out$trymany;  
   
-  # test : est-il possible de former Ls strates ayant au moins minNh unités?
-#    wtx1_copy <- if(0==takenone) wtx1 else wtx1[-1] # on veut au moins une unité dans la strate recensement au départ
-  wtx1_copy <- wtx1
-  for(i in 1:Ls) {
-    nx1h <- sum(cumsum(wtx1_copy)<minNh)
-    if (length(wtx1_copy)==nx1h) {
-      stop("it is impossible to form Ls strata containing at least 'minNh'=",minNh," units with the given 'x' and 'certain'")
-    } else wtx1_copy <- wtx1_copy[-(1:(nx1h+1))]
-  }
-  
-  # test : si q3 est différent de 0, est-il possible de calculer une variance dans chaque strate à tirage partiel?
-  if (q3!=0 && N1<Ls*2-takeall) stop("with the given 'x' and 'certain', some takesome strata variances are sure to be null, therefore it is impossible to form Ls strata having all positive nh with a nonzero 'q3'")
+  # Initialisation de quelques simples stat calculÃ©es sur les donnÃ©es
+  out <- init_stat(obj_fct = as.list(environment()))
+  EX <- out$EX;  EX2 <- out$EX2; EYc <- out$EYc; 
+  tab <- table(xnoc)
+  x1noc <- as.numeric(names(tab))
+  wtx1noc <- as.numeric(tab)
   
   #############################################################################################
   
   ## Kozak
   if (algo=="Kozak")
   {
-    rhC <- ifelse(is.na(rh),1,rh) # car on ne peut pas passer un NA à une fonction C, même si la variable n'est pas utilisé dans les calculs
-    
-    # Calculs de Nc (strate certain) et EYc
-    # Note : TY varie en fonction des strates pour le modèle loglinéaire avec 
-    # des taux de mortalité différents entre les strates.
-    stratumID <- getstratum(xgiven,N,L=1,certain,bhfull=c(min(x),max(x)+1))
-    moments<-anticip(xgiven,stratumID,model,beta,sig2,ph=1,pcertain,gamma,epsilon,A=NULL,L=1)
-    Nc <-  moments$Nc; EYc <-  moments$EYc
-    if(0==Nc) EYc <- 0; # car on ne peut pas passer NA à une fonction C
-    
-    ############################################
-    # Essayer toutes les solutions possibles si elles sont en nombre inférieur à minsol
-    nsol <- if(0==takenone) choose(N1-1,L-1) else choose(N1,L-1)
-    if(nsol<minsol) {
-      warnsol <- TRUE
-      sol<-combn((2-takenone):N1,L-1)
-      sol.detail <- matrix(NA,nrow=nsol,ncol=3*L+4)
-      colnames(sol.detail)<-c(paste("b",1:(L-1),sep=""),paste("N",1:L,sep=""),paste("n",1:L,sep=""),"opti.nh","opti.nhnonint","takeall","Nhok","nhok")
-      for (i in 1:nsol) {
-        sol.detail[i,1:(L-1)] <- x1[sol[,i]]
-        # J'ai pensé à d'abord calculer Nh et N1h et ne pas faire les calculs subséquents si Nhok ou nhok est faux.
-        # Par contre, même en utilisant getNhC, ça ralentit la fonction, probablement parce que certains calculs se trouvent 
-        # à être faits en double. Étant donné que le but était d'accélérer la fonction, je laisse tomber cette idée.
-        A <- Ai; B <- Bi; C <- Ci
-        valid<-FALSE
-        while(!valid) {
-          calculn<-strata.internal(x=x,N=length(x),bh=x1[sol[,i]],findn=findn,n=n,CV=CV,Ls=Ls,
-              Nc=Nc,EYc=EYc,alloc=list(q1=q1,q2=q2,q3=q3),takenone=length(A),
-              bias.penalty=bias.penalty,takeall=length(C),rh=rhC,model=model,
-              model.control=list(beta=beta,sig2=sig2,ph=ph,gamma=gamma,epsilon=epsilon))
-          # Vérification nh<Nh sinon -> strates fixées strates-recensement une à une
-          out.adjust<-takeallauto(nh=calculn$nh,Nh=calculn$Nh,L,A,B,C)
-          B <- out.adjust$B ;  C <- out.adjust$C ; valid <- out.adjust$valid
-        }
-        sol.detail[i,L:(2*L-1)] <- calculn$Nh
-        sol.detail[i,(2*L):(3*L-1)] <- ifelse(-2147483647==calculn$nh,NA,calculn$nh)
-        sol.detail[i,"opti.nh"] <- calculn$opti.nh
-        sol.detail[i,"opti.nhnonint"] <- calculn$opti.nhnonint
-        sol.detail[i,"takeall"] <- length(C)
-        sol.detail[i,"Nhok"] <- testNh(calculn$Nh,A,B,C,minNh)
-        sol.detail[i,"nhok"] <- testnh(calculn$nh,B,C)
-      }
-      sol.detail.check <- sol.detail[as.logical(sol.detail[,"Nhok"])&as.logical(sol.detail[,"nhok"]),,drop=FALSE]
-      if (nrow(sol.detail.check)==0) stop("it is impossible to form Ls sampled strata containing at least 'minNh' units and having all positive nh with the given 'x', 'certain' and 'alloc'")      
-      # ##################################################################################
-      # 30 avril 2012 : critère calculé sur nh entier seulement pour énumération complète
-      #                 J'enlève donc le if ici.
-      # if (idopti=="nhnonint") {
-      #   solmin <- which.min(sol.detail.check[,"opti.nhnonint"])
-      # } else {
-        index <- order(sol.detail.check[,"opti.nh"], sol.detail.check[,"opti.nhnonint"])
-        solmin <- index[1]
-      # }
-      #####################################################################################
-    } else {
+    nsol <- if(0==takenone) choose(N1noc-1,L-1) else choose(N1noc,L-1)
+    if(nsol<minsol) { 
       
-      ############################################
-      # Sinon faire rouler l'aglo de Kozak
-      warnsol <- FALSE
-      nmodel <- if (identical(model,"none")) 0 else if (identical(model,"loglinear")) 1 else 
-          if (identical(model,"linear")) 2 else if (identical(model,"random")) 3
-      # desc.rep (data.frame) va contenir des informations pour chaque répétition de l'algorithme
-      desc.rep <- data.frame(matrix(NA,nrow=ifelse("change"==rep,27,rep),ncol=3*(L-1)+11))
-      dimnames(desc.rep)<-list(1:nrow(desc.rep),c("opti.nh","opti.nhnonint","takeall",paste("b",1:(L-1),sep=""),"niter","maxstep","maxstill","initbh.type",
-              paste("initb",1:(L-1),sep=""),"Nhok.initbh","nhok.initbh",paste("b",1:(L-1),"i",sep=""),"Nhok.robust","nhok.robust"))
-      # bhi.robust (matrice numérique) va contenir les bornes initiales par défaut pour chaque valeur de takeall utilisée 
-      bhi.robust <- matrix(NA,nrow=Ls-takeall,ncol=L-1,dimnames=list(takeall:(Ls-1),paste("b",1:(L-1),"i",sep="")))
-      if ("change"==rep) {
-        bhi_type <- c("initbh","geo","cumrootf")   # initbh représente les bornes par défaut ici
-        maxstep_val <- c(3,min(10,N1),min(ceiling(N1/10),100))
-        repid <- 3 # nombre de répétitions identiques (mêmes paramètres)
-      } else {
-        bhi_type <- "initbh"   # initbh représente ici initbh s'il a été donné en entrée, les bornes par défaut sinon
-        maxstep_val <- maxstep
-        repid <- rep
-      }
-      # On fait rouler l'algo de Kozak un certain nombre de fois selon la valeur de 'rep'
-      rowrep <- 0
-      for (idbhi in bhi_type)
-      {           
-        # calcul de bh, Nhok, nhok et opti pour takeall donné en entrée + sauvegarde
-        if ("initbh" == idbhi){
-          bh <- initbh
-        } else {
-          if ("geo" == idbhi) {
-            bh <- suppressWarnings(strata.geo(x=x,n=n,CV=CV,Ls=Ls,certain=certain,alloc=list(q1=q1,q2=q2,q3=q3),
-                    rh=as.vector(na.omit(rh)),model=model,model.control=model.control)$bh)
-          } else if("cumrootf" == idbhi) {
-            bh <- suppressWarnings(strata.cumrootf(x=x,nclass=min(L*10,length(x)),n=n,CV=CV,Ls=Ls,certain=certain,
-                    alloc=list(q1=q1,q2=q2,q3=q3),rh=as.vector(na.omit(rh)),model=model,model.control=model.control)$bh)
-          } 
-          if (takenone == 1) bh <- sort(c(initbh[1], bh))
-        }
-        bhi <- bh
-
-        for (idmaxstep in maxstep_val)
-        {
-          idmaxstill <- if ("change"!=rep) maxstill else floor(idmaxstep*100/3)
-          
-          for (idrep in 1:repid)
-          {
-            A <- Ai; B <- Bi; C <- Ci
-            valid<-FALSE
-            run <- 0
-            rowrep <- rowrep+1
-            desc.rep[rowrep,"initbh.type"] <- idbhi
-            desc.rep[rowrep,"maxstep"] <- idmaxstep
-            desc.rep[rowrep,"maxstill"] <- idmaxstill
-            desc.rep[rowrep,paste("initb",1:(L-1),sep="")] <- bh <- bhi[1:(L-1)] # pourquoi [1:(L-1)]?
-            # Algorithme pour déterminer les bornes optimales
-            while(!valid)
-            {
-              run <- run+1
-              # Vérification du respect des conditions sur les Nh et les nh pour les bornes initiales demandées et takeall
-              calculn<-strata.internal(x=x,N=length(x),bh=bh,findn=findn,n=n,CV=CV,Ls=Ls,Nc=Nc,EYc=EYc,
-                  alloc=list(q1=q1,q2=q2,q3=q3),takenone=length(A),
-                  bias.penalty=bias.penalty,takeall=length(C),rh=rhC,model=model,
-                  model.control=list(beta=beta,sig2=sig2,ph=ph,gamma=gamma,epsilon=epsilon))
-              desc.rep[rowrep,"Nhok.initbh"] <- testNh(calculn$Nh,A,B,C,minNh)
-              desc.rep[rowrep,"nhok.initbh"] <- testnh(calculn$nh,B,C)
-
-              # Si non respect des conditions -> bornes robustes
-              if (!desc.rep[rowrep,"Nhok.initbh"]||!desc.rep[rowrep,"nhok.initbh"]) {
-                bh <- bhi.robust[length(C)==rownames(bhi.robust),1:(L-1)] # ligne pour le bon takeall
-                if (any(is.na(bh))) {
-                  bh <- initbh.robust(x1=x1,N1=N1,Ls=Ls,takenone=length(A),takeall=length(C),minNh=minNh,wtx1=wtx1)
-                  bhi.robust[length(C)==rownames(bhi.robust),1:(L-1)] <- bh
-                }
-                calculn<-strata.internal(x=x,N=length(x),bh=bh,findn=findn,n=n,CV=CV,Ls=Ls,Nc=Nc,EYc=EYc,
-                    alloc=list(q1=q1,q2=q2,q3=q3),takenone=length(A),
-                    bias.penalty=bias.penalty,takeall=length(C),rh=rhC,model=model,
-                    model.control=list(beta=beta,sig2=sig2,ph=ph,gamma=gamma,epsilon=epsilon))
-                desc.rep[rowrep,"Nhok.robust"] <- testNh(calculn$Nh,A,B,C,minNh)
-                desc.rep[rowrep,"nhok.robust"] <- testnh(calculn$nh,B,C)
-                opti.nh <- calculn$opti.nh   ## au cas où il y aurait un problème avec les bornes robustes, j'ai besoin de ça
-                opti.nhnonint <- calculn$opti.nhnonint  ## au cas où il y aurait un problème avec les bornes robustes, j'ai besoin de ça
-              }
-              desc.rep[rowrep,paste("b",1:(L-1),"i",sep="")] <- bh
-              pbh <- vector(length=L-1)
-              for (i in 1:(L-1)) {
-                dif <- x1-bh[i]
-                pbh[i] <- sum(dif<0)+1
-              }
-              iter <- 0
-              # Gestion des erreurs, on saute à la prochaine itération de la boucle si problème avec les bornes par défaut
-              if (!is.na(desc.rep[rowrep,"Nhok.robust"])&&(!desc.rep[rowrep,"Nhok.robust"]||!desc.rep[rowrep,"nhok.robust"])) {
-                valid <- TRUE
-                next                                                                                                        
-              }
-              # Boucle principale : optimisation des bornes
-              desciter<-rep(0,(maxiter+1)*(L+3)) # pour la sortie du programme C
-              if ("modified"==method) {
-                resuC<-.C("KozakModif",as.double(x),as.double(x1),as.integer(wtx1),as.integer(length(x)),as.integer(N1),
-                    as.integer(findn),as.integer(n),as.double(CV),as.integer(L),as.integer(Nc),as.double(EYc),
-                    as.double(q1),as.double(q2),as.double(q3),as.integer(length(A)),as.double(bias.penalty),
-                    as.integer(length(C)),as.double(rhC),as.integer(nmodel),
-                    as.double(beta),as.double(sig2),as.double(ph),as.double(gamma),as.double(epsilon),
-                    as.integer(minNh),as.integer(idmaxstep),as.integer(maxiter),as.integer(idopti=="nh"),
-                    optinh=as.double(calculn$opti.nh),optinhnonint=as.double(calculn$opti.nhnonint),
-                    pbh=as.integer(pbh),desciter=as.double(desciter),
-                    iter=as.integer(0),Nh=as.integer(calculn$Nh),nhnonint=as.double(calculn$nhnonint),
-                    nh=as.integer(calculn$nh),PACKAGE="stratification")
-              } else if ("original"==method) {
-                resuC<-.C("KozakOrig",as.double(x),as.double(x1),as.integer(wtx1),as.integer(length(x)),as.integer(N1),
-                    as.integer(findn),as.integer(n),as.double(CV),as.integer(L),as.integer(Nc),as.double(EYc),
-                    as.double(q1),as.double(q2),as.double(q3),as.integer(length(A)),as.double(bias.penalty),
-                    as.integer(length(C)),as.double(rhC),as.integer(nmodel),
-                    as.double(beta),as.double(sig2),as.double(ph),as.double(gamma),as.double(epsilon),
-                    as.integer(minNh),as.integer(idmaxstep),as.integer(maxiter),as.integer(idmaxstill),
-                    as.integer(idopti=="nh"),
-                    optinh=as.double(calculn$opti.nh),optinhnonint=as.double(calculn$opti.nhnonint),
-                    pbh=as.integer(pbh),desciter=as.double(desciter),
-                    iter=as.integer(0),Nh=as.integer(calculn$Nh),nhnonint=as.double(calculn$nhnonint),
-                    nh=as.integer(calculn$nh),PACKAGE="stratification")
-              }
-              pbh<-resuC$pbh
-              opti.nh<-resuC$optinh
-              opti.nhnonint<-resuC$optinhnonint
-              iter<-resuC$iter
-              desc.iter<-rbind(desc.iter,cbind(matrix(resuC$desciter[1:(iter*(L+3))],ncol=L+3,byrow=TRUE),run,rowrep))
-              if (identical(method,"original")) { desc.iter<-desc.iter[!apply(desc.iter[,1:(L+3)]==0,1,all),,drop=FALSE] }
-              
-              # Vérification nh<Nh sinon -> strates fixées strates-recensement une à une
-              out.adjust<-takeallauto(nh=resuC$nh,Nh=resuC$Nh,L,A,B,C)
-              B <- out.adjust$B ;  C <- out.adjust$C ; valid <- out.adjust$valid
-            }
-                        
-            bh<-pbh2bh(pbh,x1)
-            desc.rep[rowrep,1:(L+3)] <- c(opti.nh,opti.nhnonint,length(C),bh,iter) # si j'ai fait next précédemment on a bh=bhi et iter=0,
-            
-            #r# Mis de côté :
-            #r# Vérification d'arrêt de la boucle
-            #r# utile seulement si je veux arrêter les répétitions après un certain nombre de répétitions identiques
-            #r# if(stoprep) { if (dim(desc.rep)[1]==10 && length(unique(desc.rep[,1]))==1 ) break }
-          }
-        }
-      } # fin des répétitions
+      ## Ã‰numÃ©ration complÃ¨te : 
       
-      reord <- order(ifelse(desc.rep[,"opti.nh"]==0,NA,desc.rep[,"opti.nh"]), 
-                     ifelse(desc.rep[,"opti.nhnonint"]==0,NA,desc.rep[,"opti.nhnonint"]))
-               # min = plus petit opti.nh, en cas d'égalité : plus petit opti.nhnonint  
-      repmin <- reord[1]
-      if(length(repmin)==0) {
-        warning("Kozak's algorithm has not been able to move from its initial position\n",
-            "because initial boundaries lead to a null optimization criteria.\n",
-            "You could take one of the following action to solve the problem:\n",
-            "change the 'initbh' argument, give a bigger 'maxstep' or 'minsol' argument.")          
-        repmin <- 1
+      # si le nombre de solutions possibles est infÃ©rieur Ã  minsol
+      pbhsol <- combn((2-takenone):N1noc,L-1) # Note : Le as.integer transforme cette matrice en vecteur en plaÃ§ant
+                                              # bien les Ã©lÃ©ments dans l'ordre requis, je l'ai vÃ©rifiÃ©.
+      resuEnum <- .C("complete_enum_C", as.integer(pbhsol), as.integer(nsol), as.integer(L), as.double(x1noc), 
+                     as.integer(N1noc), as.double(xnoc), as.integer(Nnoc), as.integer(takenone), as.integer(takeall), 
+                     as.integer(Nc), as.double(EYc), as.double(q1), as.double(q2), as.double(q3), as.integer(nmodel), 
+                     as.double(beta), as.double(sig2), as.double(ph), as.double(gamma), as.double(epsilon), 
+                     as.double(EX), as.double(EX2), as.integer(findn), as.integer(n), as.double(CV), as.double(rhL),
+                     as.double(bias.penalty), as.integer(minNh),
+                     soldetail = as.double(rep(0, ((L-1)+2*L+5)*nsol)), NAOK = TRUE, PACKAGE="stratification")
+      
+      # Matrice des rÃ©sultats
+      sol.detail <- matrix(resuEnum$soldetail, byrow=TRUE, nrow=nsol)
+      colnames(sol.detail) <- c(paste("b",1:(L-1),sep=""),paste("N",1:L,sep=""),paste("n",1:L,sep=""),"opti.nh","opti.nhnonint","takeall","NhOK","nhOK")
+      
+      # Enlever les solutions ne respectant pas les conditions sur les Nh et les nh 
+      sol.detail.check <- sol.detail[as.logical(sol.detail[,"NhOK"]) & as.logical(sol.detail[,"nhOK"]), , drop=FALSE]
+      # Message d'erreur s'il n'y a aucune solution possible
+      if (nrow(sol.detail.check)==0) 
+        stop("it is impossible to form Ls sampled strata containing at least 'minNh' units and having all positive nh with the given 'x', 'certain' and 'alloc'", call. = FALSE)      
+      
+      # Identification de la meilleure solution (en ne considÃ©rant pas les critÃ¨res opti.nh nuls)
+      index <- order(sol.detail.check[,"opti.nh"], sol.detail.check[,"opti.nhnonint"]) 
+        ## order place les valeurs NA Ã  la fin du vecteur qu'il retourne, ce qui nous garantit de ne pas les sÃ©lectionner
+      arret <- sum(sol.detail.check[index[1], "opti.nhnonint"] == sol.detail.check[, "opti.nhnonint"])
+        ## pour identifier combien de solution arrivent Ã  la solution optimale
+      sol.min <- index[1:arret]  ## possiblement un vecteur         
+      
+      # PrÃ©parations pour la sortie
+      bhfull <- bh2bhfull(bh = sol.detail.check[sol.min[1], 1:(L-1)], x = x)
+      takeallout <- sol.detail.check[sol.min[1], "takeall"]
+      args$initbh <- "none"
+      args$algo.control <- list(method="complete enumeration", minsol=minsol, idopti="nh", minNh=minNh)
+      sol.detail.out <- data.frame(sol.detail.check[, -which(colnames(sol.detail.check) %in% c("NhOK", "nhOK")), drop=FALSE])
+      warning("the number of possible solutions was smaller than 'minsol', therefore Kozak's algorithm was not run, instead every possible strata boundaries were tried", call. = FALSE)
+      niter <- NA  ## indique que l'aglo de Kozak n'a pas Ã©tÃ© roulÃ©, sert pour un test Ã  la fin
+      
+    } else { 
+      
+      ### Sinon faire rouler l'algorithme itÃ©ratif de Kozak
+      
+      ## Traitement des bornes initiales
+      info.initbh <- matrix(NA, nrow=ifelse(trymany,3,1), ncol=2*L+4)
+      # Cette matrice contient : (ibh.type, ibh, ipbh, opti.nh, opti.nhnonint, takeall, NhOK, nhOK)
+      colnames(info.initbh) <- c("ibh.type", paste("ib", 1:(L-1), sep=""), paste("ipb", 1:(L-1), sep=""), 
+                                 "opti.nh", "opti.nhnonint", "takeall","NhOK", "nhOK")
+      for (i in 1:nrow(info.initbh)){
+        if (i==1){        
+          if (!is.null(call.ext$initbh) && !trymany){
+            ibh.type <- 0
+            ibhfull <- bh2bhfull(bh = initbh, x = x)                        
+          } else {
+            ibh.type <- 1
+            nclass <- nclass_default(Ls = Ls, N1noc = N1noc)
+            ibhfull <- strata.cumrootf.internal(obj_fct = as.list(environment()))$bhfull
+          }          
+        } else if (i==2) {
+          ibh.type <- 2
+          ibhfull <- strata.geo.internal(obj_fct = as.list(environment()))            
+        } else { # i == 3 
+          ibh.type <- 3
+          # Calcul es bornes robustes avec la fonction robust_initpbh()
+          ipbh <- robust_initpbh(obj_fct = as.list(environment()))
+          # Ces bornes sont sur l'Ã©chelle des rangs, on peut donc tout de suite les mettre dans info.initbh.
+          info.initbh[i, (L+1):(2*L-1)] <- ipbh
+          # On doit aussi les transformer sur l'Ã©chelle des donnÃ©es.
+          resuC <- .C("pbh2bhfull_C", as.integer(ipbh), as.integer(L), as.double(x1noc), as.integer(N1noc), 
+                      bhfull = as.double(rep(0, L+1)), NAOK = TRUE, PACKAGE="stratification")
+          ibhfull <- resuC$bhfull
+        }
+        
+        # Pour ajouter une borne pour la strate takenone au besoin :
+        ibhfull <- add_b1_takenone(ibhfull=ibhfull, Ls=Ls, takenone=takenone, x=x) 
+        
+        ## PrÃ©parations pour la sortie
+        args$initbh <- if (trymany) "many" else bhfull2bh(ibhfull)   # doit Ãªtre fait aprÃ¨s l'appel de add_b1_takenone (qui a peut-Ãªtre ajoutÃ© une borne)         
+        args$algo.control <- list(minsol = minsol, idopti = idopti, minNh = minNh, maxiter = maxiter,
+                                  maxstep = maxstep,  maxstill = maxstill, rep = rep, trymany = trymany)
+        
+        # Stratification avec chacun des ensembles de bornes initiales
+        resibh <- strata_bh_opti(bhfull = ibhfull, takeallin = takeall, takeall.adjust = TRUE, dotests = TRUE,
+                                 obj_fct = as.list(environment()))
+        
+        # Enregistrer les rÃ©sultats dans info.initbh 
+        # (seul ipbh n'est pas rempli ici, il demeure NA pour toutes les bornes autres que robustes)        
+        info.initbh[i, "ibh.type"] <- ibh.type
+        info.initbh[i, 2:L] <- bhfull2bh(ibhfull)
+        info.initbh[i, c("opti.nh", "opti.nhnonint", "takeall", "NhOK", "nhOK")] <- 
+          c(resibh$opti.nh, resibh$opti.nhnonint, resibh$takeall, resibh$NhOK, resibh$nhOK)
+        
       }
       
-      # Préparation pour la sortie des résultats
-      iter <- desc.rep[repmin,"niter"]
-      bhi <- as.numeric(desc.rep[repmin,paste("b",1:(L-1),"i",sep="")])
-      converge <- if (iter>=maxiter) FALSE else TRUE
-      dimnames(desc.iter)<-list(c(1:dim(desc.iter)[1]),c(paste("b",1:(L-1),sep=""),"opti.nh","opti.nhnonint","step","iter","run","rep"))
-      if(1==rep) desc.iter <- desc.iter[,-(L+5),drop=FALSE]
-      
-      # Avertissements et erreurs :     
-      if (!converge) warning("the algorithm did not converge: the maximum number of iterations was reached")
-      if (all(desc.iter[,"iter"]==0)) warning("Kozak's algorithm has not been able to move,\n", 
-            "it discarded every updated boundaries and remained at the initial boundaries")
-      if (rep!="change") {
-        if (!is.na(desc.rep[repmin,"Nhok.initbh"])&&!desc.rep[repmin,"Nhok.initbh"])
-          warning("some initial sampled strata contain less than minNh units : robust initial boundaries have been used")
-        if (!is.na(desc.rep[repmin,"nhok.initbh"])&&!desc.rep[repmin,"nhok.initbh"])
-          warning("some initial sampled strata have non-positive nh : robust initial boundaries have been used")
-        if (sum(desc.rep[,"niter"])==0)
-          stop("please give an appropriate 'initbh' argument or a bigger 'minsol' argument:\n",
-               "the robust initial boundaries give sampled strata with less than 'minNh' units and/or with non-positive nh")
-      } else {
-        if (sum(desc.rep[,"niter"])==0)
-          stop("please give an appropriate 'initbh' argument or a bigger 'minsol' argument:\n",
-               "the rep=='change' parameter gives no solution here because the geometric, cumrootf, default and robust\n",
-               "initial boundaries give sampled strata with less than 'minNh' units and/or with non-positive nh")
-      }
-    }
-    
-    # Calcul de plusieurs stat pour les bornes optimales. En fait, ces stat sont calculées à chaque
-    # itération de l'algo, mais elles ne sont pas enregistrées. Ça demanderait plus de mémoire et ça alourdirait le programme inutilement.
-    bh <- if(nsol<minsol) sol.detail.check[solmin,1:(L-1)] else as.numeric(desc.rep[repmin,paste("b",1:(L-1),sep="")])
-    takeall.final <- if(nsol<minsol) sol.detail.check[solmin,"takeall"] else desc.rep[repmin,"takeall"]
-    calculn<-strata.internal(x=x,N=length(x),bh=bh,findn=findn,n=n,CV=CV,Ls=Ls,Nc=Nc,EYc=EYc,
-        alloc=list(q1=q1,q2=q2,q3=q3),takenone=length(A),
-        bias.penalty=bias.penalty,takeall=takeall.final,rh=rhC,model=model,
-        model.control=list(beta=beta,sig2=sig2,ph=ph,gamma=gamma,epsilon=epsilon))         
-    opti<-calculn$opti.nhnonint
-    Nh<-calculn$Nh
-    nh.nonint <- calculn$nhnonint
-    nh <- calculn$nh
-    
-    # Calcul des moments anticipés
-    EYh<-calculn$meanh
-    VYh<-calculn$varh
-    TAY<-sum(Nh[A]*EYh[A])
-    TY<-sum(Nh*EYh)+Nc*EYc
-    
-    # strates pour la sortie
-    bhfull<-c(min(x),bh,max(x)+1)
-    stratumID <- getstratum(xgiven,N,L,certain,bhfull)
-    
-    # Préparation pour la sortie des résultats
-    if(0==Nc) EYc <- NA;
-    if (warnsol) {      
-      algo.control <- list(method="complete enumeration", minsol=minsol, idopti=idopti, minNh=minNh)
-      warning("the number of possible solutions was smaller than 'minsol', therefore Kozak's algorithm was not run, instead every possible strata boundaries were tried")
-    } else {
-      algo.control <- list(method=method, minsol=minsol, idopti=idopti, minNh=minNh, maxiter=maxiter, maxstep=maxstep)
-      if (method=="original")  {
-        if(rep!="change") {
-          algo.control <- c(algo.control, list(maxstill=maxstill, rep=rep))
-        } else {
-          algo.control <- c(algo.control[-length(algo.control)], list(rep=rep))
+      if (all(info.initbh[,"NhOK"]*info.initbh[,"nhOK"] == 0)) {
+        
+        # Erreur si les conditions ne sont respectÃ©es pour aucun ensemble de bornes initiales
+        warning("the algorithm cannot be run because ", ngettext(trymany, "every ", ""),
+             "initial boundaries give sampled strata with less than 'minNh' units and/or with non-positive nh", 
+             call. = FALSE)
+        
+        ## PrÃ©parations pour la sortie
+        bhfull <- bh2bhfull(bh = info.initbh[1, 2:L], x = x)
+        takeallout <- info.initbh[1, "takeall"]
+        niter <- NA
+        converge <- NA
+        run.detail.out <- NA
+        run.min <- NA
+        iter.detail.out <- NA
+        
+      } else { #  on fait ces calculs seulement si les conditions sont respectÃ©es pour au moins un ensemble de bornes initiales 
+        
+        ## Construire une matrice avec toutes les combinaisons de paramÃ¨tres Ã  essayer
+        # (uniquement celles qui respectent les conditions sur les Nh et les nh)
+        # Cette matrice contient : (ibh.type, ibh, ipbh, opti.nh, opti.nhnonint, takeall, maxstep, maxstill)
+        combin2try <- info.initbh[info.initbh[,"NhOK"]*info.initbh[,"nhOK"] == 1, , drop=FALSE]
+        nibhOK <- nrow(combin2try)
+        # Calculer pbh au besoin
+        for (i in 1:nibhOK){
+          if (all(is.na(combin2try[i, (L+1):(2*L-1)])))
+          combin2try[i, (L+1):(2*L-1)] <- bh2pbh(bh=combin2try[i, 2:L], x1noc=x1noc)
         }
+        # Pour ajouter l'info maxstep et maxstill, et doubler le nombre de ligne de combin2try si trymany=TRUE
+        colnames(combin2try)[colnames(combin2try) %in% c("NhOK", "nhOK")] <- c("maxstep", "maxstill")
+          #Si on avait un maxstep vecteur (comme on a dÃ©jÃ  eu), il faudrait ici faire un 
+          #rbind(combin2try autant de fois que la longueur de maxstep)
+        combin2try[,"maxstep"] <- rep(maxstep, each=nibhOK)
+        combin2try[,"maxstill"] <- rep(maxstill, each=nibhOK)
+        # J'aurais aimÃ© que toutes les combinaisons pour les mÃªmes bornes initiales soient consÃ©cutives,
+        # mais c'Ã©tait plus difficile Ã  coder, et Ã§a ne vaut pas la peine d'allourdir le code pour Ã§a.
+        
+        ## Faire rouler l'algo itÃ©ratif en C une fois pour toutes les lignes de la matrice combin2try
+        ncombin <- nrow(combin2try) 
+        # Note : pour que combin2try se transforme en vecteur de la faÃ§on souhaitÃ©e, soit ligne par ligne,
+        # il faut d'abord transposer la matrice
+        resuKozak <- .C("algo_Kozak_C", as.double(t(combin2try)), as.integer(ncombin), as.integer(L), 
+                        as.double(x1noc), as.integer(N1noc), as.double(xnoc), as.integer(Nnoc), as.integer(takenone), 
+                        as.integer(takeall), as.integer(Nc), as.double(EYc), as.double(q1), as.double(q2), 
+                        as.double(q3), as.integer(nmodel), as.double(beta), as.double(sig2), as.double(ph), 
+                        as.double(gamma), as.double(epsilon), as.double(EX), as.double(EX2), as.integer(findn), 
+                        as.integer(n), as.double(CV), as.double(rhL), as.double(bias.penalty), as.integer(minNh), 
+                        as.integer(maxiter), as.integer(idopti=="nh"), as.integer(rep),
+                        run.detail = as.double(rep(0, (2*(L-1)+6)*(ncombin*rep))), 
+                        iter.detail = as.double(rep(0, ((L-1)+6)*(maxiter+1)*ncombin*rep)), # c'est une longueur max
+                        nrowiter = as.integer(0), NAOK = TRUE, PACKAGE="stratification")
+        
+        ## Reformater run.detail
+        run.detail <- matrix(resuKozak$run.detail, byrow=TRUE, nrow=ncombin*rep)
+        # contient : (bh, opti.nh, opt.inhnonint, takeall, niter, ibh.type, ibh, rep)
+        colnames(run.detail) <- c(paste("b", 1:(L-1), sep=""), "opti.nh", "opti.nhnonint", "takeall", "niter",
+                                  "ibh.type", paste("ib", 1:(L-1), sep=""), "rep")
+        # Note : run.detail ne contiendra pas toujours 30 lignes. Seulement les combinaisons pour lesquelles les
+        # bornes initiales respectent les conditions sur les Nh et le nhy sont incluses.
+        
+        ## Reformater iter.detail
+        iter.detail <- matrix(resuKozak$iter.detail, byrow=TRUE, ncol=(L-1)+6)
+        # On ne savait pas d'avance le nombre de lignes de cette matrice, alors on lui avait initialement donnÃ©
+        # le nombre maximum possible de ligne. Il faut maintenant la tronquer Ã  son nombre rÃ©el de lignes.
+        iter.detail <- iter.detail[1:resuKozak$nrowiter, , drop = FALSE]
+        # contient : (bh, opti.nh, opti.nhnonint, takeall, step, iter, run)
+        colnames(iter.detail) <- c(paste("b", 1:(L-1), sep=""), "opti.nh", "opti.nhnonint", "takeall", "step", "iter", "run")
+        
+        ## SÃ©lection du meilleur ensemble de bornes (fonctionne mÃªme si un seul lancement de l'algo) :
+        index <- if (idopti == "nh") order(run.detail[, "opti.nh"], run.detail[,"opti.nhnonint"]) else 
+                                     order(run.detail[, "opti.nhnonint"])
+        arret <- sum(run.detail[index[1], "opti.nhnonint"] == run.detail[, "opti.nhnonint"]) 
+        run.min <- index[1:arret]  ## possiblement un vecteur    
+      
+        ## PrÃ©parations pour la sortie
+        bhfull <- bh2bhfull(bh = run.detail[run.min[1], 1:(L-1)], x = x)
+        takeallout <- run.detail[run.min[1], "takeall"]
+        niter <- run.detail[run.min, "niter"]  ## possiblement un vecteur
+        converge <- if (all(niter >= maxiter)) FALSE else TRUE
+        run.detail.out <- as.data.frame(run.detail)
+        # ramener ibh.type Ã  l'Ã©chelle de caractÃ¨res dans run.detail.out
+        run.detail.out[, "ibh.type"] <- ifelse(run.detail[, "ibh.type"] == 0,   "initbh",
+                                        ifelse(run.detail[, "ibh.type"] == 1, "cumrootf", 
+                                        ifelse(run.detail[, "ibh.type"] == 2,      "geo", "robust")))
+        iter.detail.out <- as.data.frame(iter.detail)
+        
+        # Avertissements et erreurs :     
+        if (!converge) warning("the algorithm did not converge: the maximum number of iterations was reached", call. = FALSE)
       }
     }
   }
@@ -315,44 +231,61 @@
   ## Sethi
   if (algo=="Sethi")
   {
-    converge<-TRUE
-    tol0<-min(x)*1e-8
-    bhi <- initbh
+    # Initialisation d'objets
+    converge <- TRUE
+    tol0 <- min(x)*1e-8
+    iter.detail <- matrix(NA, nrow=maxiter*(Ls-takeall-1)+1, ncol=L-1+3)
+    colnames(iter.detail) <- c(paste("b", 1:(L-1), sep=""), "opti.nhnonint", "takeall", "iter")
+    irow <- 0
+    valid <- FALSE
+    # Les formules de cet algo sont conÃ§ues pour le modÃ¨le loglinÃ©aire (dont model="none" est un cas 
+    # particulier). Pour obtenir mes phih et psih, je dois poser nmodel=1. Une erreur est gÃ©nÃ©rÃ©e si le modÃ¨le
+    # linear ou random a Ã©tÃ© demandÃ© avec Sethi, alors on est certain ici que c'est ocrrect de faire Ã§a.
+    nmodel = 1;
+    # bornes initiales
+    initbh <- if (is.null(call.ext$initbh)) quantile(xnoc, probs=(1:(Ls-1))/Ls) else initbh
+      # Les bornes initiales par dÃ©faut sont les bornes arithmÃ©tiques.
+      # On n'a pas changÃ© Ã§a afin de limiter les changements dans des rÃ©sultats dÃ©jÃ  obtenus.
+      # Aussi, j'ai essayÃ© les bornes cumrootf comme pour l'algo de Kozak, mais l'algo convergeait
+      # nettement moins souvent dans les exemples du package ou de l'article.
+    ibhfull <- bh2bhfull(bh = initbh, x = x)                        
+    ibhfull <- add_b1_takenone(ibhfull=ibhfull, Ls=Ls, takenone=takenone, x=x)        
+    bhfull <- ibhfull  ## Pas Ã  l'intÃ©rieur de la boucle de validation pour strate takeall car si une strate
+                       ## takeall apparaÃ®t, il est plus avantageux de relancer l'algo du point oÃ¹ on Ã©tait
+                       ## Ã  la fin du prÃ©cÃ©dent lancement de l'algo plutÃ´t que des bornes initiales.
     
-    # Algorithme pour déterminer les bornes optimales
-    valid<-FALSE
-    run<-0
+    # Algorithme pour dÃ©terminer les bornes optimales
     while(!valid)
     {
-      bhfull <- c(min(x),bhi,max(x)+1)
-      iter<-0
-      run<-run+1
-      diff<-1
-      epsilon<-0.00001
-      while((iter<maxiter)&&(max(diff)>=epsilon))
+      iter <- 0
+      diff <- 1
+      epsilon <- 0.00001
+      A <- if(takenone==0) NULL else 1:takenone
+      B <- (takenone + 1):(L - takeall)
+      C <- if(takeall==0) NULL else (L - takeall + 1):L
+      while((iter < maxiter) && (max(diff) >= epsilon))
       { 
-        # Calcul de la taille d'echantillon n courante
-        stratumID <- getstratum(xgiven,N,L,certain,bhfull)
-        moments <- anticip(xgiven,stratumID,model="loglinear",beta,sig2,ph,pcertain,gamma,epsilon,A,L)
-        Nh <- moments$Nh ; Nc <-  moments$Nc; phih <- moments$phih ; psih <- moments$psih ;
-        EYh <- moments$EYh ; EYc <- moments$EYc ; VYh <- moments$VYh ;
-        TY <- moments$TY ; TAY <- moments$TAY
-        out.Alloc <- getAlloc(q1,q2,q3,B,C,Nh,Nc,EYh,VYh)
-        gammah <- out.Alloc$gammah ; ah <- out.Alloc$ah ; T1 <- out.Alloc$T1
-        out.opti <- optiCriteria(findn,n,CV,q1,q2,q3,bias.penalty,B,C,rh,Nh,VYh,TY,TAY,T1,ah,gammah)
-        U <- out.opti$U ; U1 <- out.opti$U1 ; U2 <- out.opti$U2 ; V <- out.opti$V
-        opti <- out.opti$opti
+        # Calcul de la taille d'echantillon n (critÃ¨re Ã  optimiser) courante
+        resbh <- strata_bh_opti(bhfull = bhfull, takeallin = takeall, takeall.adjust = FALSE, dotests = FALSE,
+                                 obj_fct = as.list(environment()))
+        Nh <- resbh$Nh; phih <- resbh$phih; psih <- resbh$psih;
+        EYh <- resbh$EYh; VYh <- resbh$VYh; TY <- resbh$TY; TAY <- resbh$TAY;
+        gammah <- resbh$gammah; ah <- resbh$ah; U <- resbh$U; U2 <- resbh$U2; V <- resbh$V;
+        opti.nhnonint <- resbh$opti.nhnonint;
+        # On doit calculer U1 ici car c'est le seul endroit dans le package oÃ¹ on a besoin de faire ce calcul
+        U1 <- sum(((Nh^2)*VYh/(gammah*rhL))[B])
         # cat(U,V,"\n")
-        desc.iter<-rbind(desc.iter,c(bhfull[-c(1,L+1)],opti,iter,run))
-        # Arrêt de l'algorithme si des strates sont vides ou des variances nulles causent des divisions par zéro
+        irow <- irow + 1
+        iter.detail[irow,] <- c(bhfull2bh(bhfull), opti.nhnonint, takeall, iter)
+        # ArrÃªt de l'algorithme si des strates sont vides ou des variances nulles causent des divisions par zÃ©ro
         if (any(Nh==0)) {
           warning("The algorithm did not converge: division by zero caused by an empty stratum. Other intial boundaries could solve the problem.")
           nbh<-NA
-        } else if (any(VYh==0)&&isTRUE(q3!=0&&q3!=1)) {
+        } else if (any(VYh==0) && q3!=0 && q3!=1) {
           warning("The algorithm did not converge: division by zero caused by a 0 stratum variance. Other intial boundaries could solve the problem.")
           nbh<-NA
         } else {
-          # Calcul des dérivées
+          # Calcul des dÃ©rivÃ©es
           dNNh<-rep(1,L); dNphih<-dNpsih<-rep(0,L)
           dENh<--ph*phih/(Nh^2)
           dEphih<-ph/Nh
@@ -368,7 +301,7 @@
             dU11<-(2-2*q1)*Nh^(1-2*q1)*dN*EYh^(-2*q2)*VYh^(1-q3)
             dU12<-Nh^(2-2*q1)*(-2*q2)*EYh^(-2*q2-1)*dE*VYh^(1-q3)
             dU13<- if (isTRUE(q3==1)) 0 else Nh^(2-2*q1)*EYh^(-2*q2)*(1-q3)*VYh^(-q3)*dV
-            c(rep(0,length(A)),((dU11+dU12+dU13)/rh)[B],rep(0,length(C)))[order(c(A,B,C))]
+            c(rep(0,length(A)),((dU11+dU12+dU13)/rhL)[B],rep(0,length(C)))[order(c(A,B,C))]
           }
           dU1Nh<-dU1(dNNh,dENh,dVNh); dU1phih<-dU1(dNphih,dEphih,dVphih); dU1psih<-dU1(dNpsih,dEpsih,dVpsih); 
           dU2 <- function(dN,dE,dV) {
@@ -386,14 +319,14 @@
           dV3 <- function(dN,dV){c(rep(0,length(A)),(dN*VYh+Nh*dV)[B],rep(0,length(C)))[order(c(A,B,C))]}
           dV3Nh<-dV3(dNNh,dVNh); dV3phih<-dV3(dNphih,dVphih); dV3psih<-dV3(dNpsih,dVpsih);
           #cat(dV3Nh,dV3phih,dV3psih,"\n")
-          dV4 <- function(dN,dV){c(rep(0,length(A)+length(B)),((dN*VYh+Nh*dV)*(1-1/rh))[C])[order(c(A,B,C))]}
+          dV4 <- function(dN,dV){c(rep(0,length(A)+length(B)),((dN*VYh+Nh*dV)*(1-1/rhL))[C])[order(c(A,B,C))]}
           dV4Nh<-dV4(dNNh,dVNh); dV4phih<-dV4(dNphih,dVphih); dV4psih<-dV4(dNpsih,dVpsih);
           #cat(dV4Nh,dV4phih,dV4psih,"\n")
           dNh<-dT1Nh+((dU1Nh*U2+U1*dU2Nh)*V-U*(dV1Nh-dV2Nh+dV3Nh+dV4Nh))/(V^2)
           dphih<-dT1phih+((dU1phih*U2+U1*dU2phih)*V-U*(dV1phih-dV2phih+dV3phih+dV4phih))/(V^2)
           dpsih<-dT1psih+((dU1psih*U2+U1*dU2psih)*V-U*(dV1psih-dV2psih+dV3psih+dV4psih))/(V^2)
           #cat(dNh,dphih,dpsih,"\n")
-          # Mise à jour des bornes
+          # Mise Ã  jour des bornes
           a1<-dpsih[-L]-dpsih[-1]
           b1<-dphih[-L]-dphih[-1]
           #cat(b1,"\n")
@@ -412,78 +345,88 @@
           diff<-rep(0,L+1)
           converge<-FALSE
         } else {
-          # Une non convergence souvent observée avec les populations étudiées est une dernière strate nulle qui apparaît.
-          # Je vais contraindre cette dernière strate à contenir minNh unités en corrigeant la dernière borne si elle est trop grande.
-          # C'est une correction inspirée du programme original de Louis-Paul.
-          bhmax <- x1[N1-sum(cumsum(rev(wtx1))<minNh)]
+          # Une non convergence souvent observÃ©e avec les populations Ã©tudiÃ©es est une derniÃ¨re strate nulle qui apparaÃ®t.
+          # Je vais contraindre cette derniÃ¨re strate Ã  contenir minNh unitÃ©s en corrigeant la derniÃ¨re borne si elle est trop grande.
+          # C'est une correction inspirÃ©e du programme original de Louis-Paul.
+          bhmax <- x1noc[N1noc-sum(cumsum(rev(wtx1noc))<minNh)]
           if (nbh[L-1]>bhmax) nbh[L-1] <- bhmax
-          # Note : Je pourrais aussi programmer des contraintes semblables sur les autres bornes mais ce serait plus compliqué,
-          # sauf pour la borne 1. Je me limite tout à cette correction car c'est la seule qui se trouvait dans le programme original 
-          # de Louis-Paul et parce que de toute façon on favorise l'utilisation de Kozak plutôt que Sethi.
-          nbhfull<-c(min(x),nbh,max(x)+1)
+          # Note : Je pourrais aussi programmer des contraintes semblables sur les autres bornes mais ce serait plus compliquÃ©,
+          # sauf pour la borne 1. Je me limite Ã  cette correction car c'est la seule qui se trouvait dans le programme original 
+          # de Louis-Paul et parce que de toute faÃ§on on favorise l'utilisation de Kozak plutÃ´t que Sethi.
+          nbhfull <- bh2bhfull(bh = nbh, x = x)
           iter<-iter+1
           diff<-abs(nbhfull-bhfull)/(nbhfull+epsilon)
           if (max(diff)>=epsilon) bhfull<-nbhfull
         }
-      }
+      } ## fin du while de l'algo
       
-      # Calcul de n pour la borne finale
-      if (converge) {           
-        stratumID <- getstratum(xgiven,N,L,certain,bhfull)
-        moments<-anticip(xgiven,stratumID,model="loglinear",beta,sig2,ph,pcertain,gamma,epsilon,A,L)
-        Nh <- moments$Nh ; Nc <-  moments$Nc; phih <- moments$phih ; psih <- moments$psih ;
-        EYh <- moments$EYh ; EYc <- moments$EYc ; VYh <- moments$VYh ;
-        TY <- moments$TY ; TAY <- moments$TAY
-        out.Alloc <- getAlloc(q1,q2,q3,B,C,Nh,Nc,EYh,VYh)
-        gammah <- out.Alloc$gammah ; ah <- out.Alloc$ah ; T1 <- out.Alloc$T1
-        out.opti <- optiCriteria(findn,n,CV,q1,q2,q3,bias.penalty,B,C,rh,Nh,VYh,TY,TAY,T1,ah,gammah)
-        opti <- out.opti$opti
-        desc.iter<-rbind(desc.iter,c(bhfull[-c(1,L+1)],opti,iter,run))
-      }
-      
-      # Détermination de n et des nh
-      out.nh <- getnh(L,A,B,C,n=opti,findn,T1,ah,Nh)
-      nh.nonint <- out.nh$nh.nonint; nh <- out.nh$nh
-      
-      # Vérification nh<Nh sinon -> strates fixées strates-recensement une à une
       if (converge) {
-        out.adjust<-takeallauto(nh,Nh,L,A,B,C)
-        B <- out.adjust$B ;  C <- out.adjust$C ; valid <- out.adjust$valid
+        # Calcul de n pour la borne finale 
+        # (car si on a convergence, l'algo s'arrÃªte aprÃ¨s avoir modifiÃ© une derniÃ¨re fois les bornes )
+        resbh <- strata_bh_opti(bhfull = bhfull, takeallin = takeall, takeall.adjust = FALSE, dotests = FALSE,
+                                 obj_fct = as.list(environment()))
+        irow <- irow + 1
+        iter.detail[irow,] <- c(bhfull2bh(bhfull), resbh$opti.nhnonint, takeall, iter)
+
+        # VÃ©rification nh<Nh sinon -> strates fixÃ©es strates-recensement une Ã  une
+        resVerif <- .C("verif_takeall_C", as.double(resbh$nhnonint), as.integer(resbh$Nh), 
+                       as.integer(L), as.integer(takenone), 
+                       takeall = as.integer(takeall), valid = as.integer(0), 
+                       NAOK = TRUE, package="stratification")
+        takeall <- resVerif$takeall; valid <- as.logical(resVerif$valid);
       } else valid<-TRUE
       
-    }
+    } ## fin du while de la correction pour strate takeall
     
-    # Préparation pour la sortie des résultats
-    if (iter>=maxiter) {
+    # PrÃ©paration pour la sortie des rÃ©sultats
+    if (iter >= maxiter) {
       warning("the algorithm did not converge: the maximum number of iterations was reached")
       converge <- FALSE
     }
-    dimnames(desc.iter)<-list(c(1:dim(desc.iter)[1]),c(paste("b",1:(L-1),sep=""),"n","iter","run"))
-    algo.control <- list(maxiter=maxiter)
-    bh<-bhfull[-c(1,L+1)]
-    takeall.final <- length(C)
+    iter.detail.out <- as.data.frame(iter.detail[1:irow, , drop=FALSE])
+    args$initbh <- bhfull2bh(ibhfull) # doit Ãªtre fait aprÃ¨s l'appel de add_b1_takenone (qui a peut-Ãªtre ajoutÃ© une borne)
+    args$algo.control <- list(maxiter=maxiter)
+    takeallout <- takeall
+    niter <- iter
   }
   #############################################################################################
   
-  # Calcul du CV
-  out.MSEbias <- statMSEbias(bias.penalty,TAY,Nh,VYh,nh,rh,B,C,TY)
-  se <- out.MSEbias$se ; prop <- out.MSEbias$prop ; bias <- out.MSEbias$bias
+  ## Pour la sortie
+  out <- strata.bh.internal(bhfull = bhfull, takeallin = takeallout, takeall.adjust = FALSE, obj_fct = as.list(environment()))
+
+  # Avertissements que l'algo n'a pas bougÃ© :     
+  if(algo=="Kozak" && !is.na(niter) && !trymany){
+    notmove <- if (isTRUE(all.equal(resibh$Nh, out$Nh))) TRUE else FALSE
+  } else if (algo=="Kozak" && !is.na(niter) && trymany){
+    notmove <- if (all(run.detail[,"niter"] == maxstill)) TRUE else FALSE
+  } else notmove <- FALSE
+  if (notmove){
+    warning("Kozak's algorithm has not been able to move,\n", 
+            "it discarded every updated boundaries and remained at the initial boundaries", call. = FALSE)
+  }
+    
+  # Dans out, modifier opti.nh et opti.nhnonint pour opti.criteria
+  indexopti <- which(grepl("opti", names(out), fixed = TRUE))  ## position des deux opti dans out
+  indexopticriteria <- which(names(out) == paste("opti.", idopti, sep=""))  ## position du opti Ã  convserver
+  names(out)[indexopticriteria] <- "opti.criteria"  ## pour renommer le opti Ã  conserver
+  out[[setdiff(indexopti, indexopticriteria)]] <- NULL  ## pour effacer l'autre opti
   
-  # Sortie des résultats
-  out<-list(Nh=Nh,nh=nh,n=sum(nh)+Nc,nh.nonint=nh.nonint,certain.info=c(Nc=Nc,meanc=EYc),opti.criteria=opti,bh=as.numeric(bh),
-      meanh=ifelse(Nh==0,NA,EYh),varh=ifelse(Nh==0,NA,VYh),mean=TY/N,RMSE=se/N,RRMSE=se/TY,relativebias=bias,propbiasMSE=prop,
-      stratumID=stratumID,takeall=takeall.final,call=match.call(),date=date(),
-      args=list(x=xgiven,initbh=as.numeric(initbh),n=n,CV=CV,Ls=Ls,certain=certain,alloc=alloc,takenone=takenone,bias.penalty=bias.penalty,
-          takeall=takeall,rh=rh,model=model,model.control=model.control,algo=algo,algo.control=algo.control))
+  # Ajouter les bornes au dÃ©but
+  out <- c(list(bh = bhfull2bh(bhfull)), out)
+  # Ajouter les info relatives aux algorithmes
   if(algo=="Kozak"){
-    if(nsol<minsol) { out$sol.detail <- sol.detail.check[,-c(3*L+2,3*L+3)] ; out$sol.min <- solmin ; out$nsol <- nsol
+    if(nsol<minsol) {
+      out <- c(out, list(sol.detail = sol.detail.out, sol.min = sol.min, nsol = nsol))
     } else {
-      out$initbh <- as.numeric(bhi) ; out$iter.detail <- desc.iter ; out$niter <- iter ; out$converge <- converge
-      if(rep>1) { out$rep.detail <- desc.rep ; out$rep.min <- repmin } 
+      out <- c(out, list(nsol = nsol, iter.detail = iter.detail.out, niter = niter, converge = converge))
+      if(rep>1) out <- c(out, list(run.detail = run.detail.out, run.min = run.min))  
     }     
-  } else {
-    out$initbh <- as.numeric(bhi) ; out$iter.detail <- desc.iter ; out$niter <- iter ; out$converge <- converge
-  } 
+  } else { # if(algo=="Sethi")
+    out <- c(out, list(iter.detail = iter.detail.out, niter = iter, converge = converge))
+  }
+  
   class(out)<-"strata"
-  return(out)
+  out
+  
 }
+  
