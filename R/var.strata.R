@@ -27,7 +27,7 @@ var.strata <- function(strata, y = NULL, rh = strata$args$rh, rh.postcorr = FALS
   strata.rhL <- if (takenone > 0) c(rep(1,length(takenone), strata$args$rh)) else strata$args$rh
   stratumIDnoc <- if (is.null(certain)) strata$stratumID else as.numeric(as.character(strata$stratumID[-certain]))
   Nh <- strata$Nh
-  bias.penalty <- strata$args$bias.penalty
+  bias.penalty <- if(is.null(strata$args$bias.penalty)) 1 else strata$args$bias.penalty
   
   # Initialisation de quelques simples stat calculées sur les données (EX, EX2, EYc)
   out <- init_stat(obj_fct = as.list(environment()))

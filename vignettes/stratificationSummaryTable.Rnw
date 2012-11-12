@@ -1,0 +1,243 @@
+\documentclass[10pt]{article}
+
+\usepackage{amsmath} % Pour utiliser la commande \boldsymbol qui permet de mettre des lettres grecs en gras
+\usepackage{amssymb} % Pour utiliser \checkmark
+\usepackage[table]{xcolor} % Pour avoir des lignes avec une couleur de fond dans une table
+\usepackage{rotating} % Pour inscrire du texte dans un autre angle que l'horizontale
+\usepackage{booktabs} % Pour avoir de plus belles lignes dans un tableau
+\usepackage{colortbl} % Pour avoir des lignes avec de couleur dans un tableau
+\usepackage{url}
+
+%\VignetteIndexEntry{R package stratification summary table}
+
+\setlength{\heavyrulewidth}{0.1em}
+\let\code=\texttt
+\let\proglang=\textsf
+\newcommand{\pkg}[1]{{\fontseries{b}\selectfont #1}}
+
+
+\begin{document}
+
+\title{\proglang{R} package \pkg{stratification} summary table}
+
+\author{Sophie Baillargeon and Louis-Paul Rivest}
+
+\maketitle
+
+A summary table of the package \pkg{stratification} can be found in the appendix of
+Baillargeon and Rivest (2011). Since the publication of this paper, the package has been
+updated (see the NEWS file for more details). At the end of this short note you will find
+an update of this summary table
+that reflects the changes made to the package. This table aims at providing a quick
+reference for the \proglang{R} package \pkg{stratification}.
+It lists the five public functions in \pkg{stratification} and their
+arguments. The following notes complete the table\\
+
+\medskip
+
+\begin{small}
+
+\noindent $(1)$ According to the general allocation scheme (Hidiroglou and Srinath, 1993). The
+stratum sample sizes are proportional to $N_h^{2q_1}\bar{Y}_h^{2q_2}S_{yh}^{2q_3}$
+(see \code{help(stratification)} for more details).\\
+
+\noindent $(2)$ The elements of the \code{model.control} argument depend on the model :\\
+- \code{loglinear} model with mortality :
+\begin{equation*}
+ Y = \left\{ \begin{array}{ll}
+\exp(\alpha + \mbox{\code{beta}} \ \log(X) + \mbox{\code{epsilon}}) & \mbox{with probability } p_h\\
+0 & \mbox{with probability } 1-p_h \end{array} \right.
+\end{equation*}
+where $\mbox{\code{epsilon}} \sim N(0,\mbox{\code{sig2}})$ is independent of $X$. The parameter $p_h$
+is specified through \mbox{\code{ph}}, \mbox{\code{ptakenone}} and \mbox{\code{pcertain}}.\\
+- heteroscedastic \code{linear} model :
+$$  Y = \mbox{\code{beta}} X + \mbox{\code{epsilon}} \qquad \mbox{where} \quad \mbox{\code{epsilon}}
+\sim N(0,\mbox{\code{sig2}} \ X^{\mbox{\code{gamma}}})$$
+- \code{random} replacement model:\\
+\begin{equation*}
+ Y = \left\{ \begin{array}{ll}
+X & \mbox{with probability } 1-\mbox{\code{epsilon}} \\
+Xnew & \mbox{with probability } \mbox{\code{epsilon}} \end{array} \right.
+\end{equation*}
+where $Xnew$ is a random variable independent of $X$ with the same distribution as $X$.\\
+
+\noindent The following table presents \code{model.control} default values according to the model.\\
+
+\end{small}
+
+\noindent
+\begin{footnotesize}
+\begin{tabular}{lccccccc}\hline
+\textbf{model} & \code{beta} & \code{sig2} & \code{ph} & \code{ptakenone} &
+\code{pcertain} & \code{gamma} & \code{epsilon} \\ \hline
+\code{"loglinear"} & 1 & 0 & \code{rep(1,Ls)} & 1 & 1 & -- & -- \\
+\code{"linear"} & 1 & 0 & -- & -- & -- & 0 & --\\
+\code{"random"} & -- & -- & -- & -- & -- & -- & 0 \\ \hline
+\end{tabular}
+\end{footnotesize}
+
+\newpage
+
+\begin{small}
+
+\noindent $(3)$ The default value of \code{initbh} is the boundaries obtained with the
+cumulative root frequency method of Dalenius and Hodges (1959) for Kozak's algorithm,
+and the set of arithmetic starting points of Gunning and Horgan (2007) for Sethi's algorithm.
+If \code{takenone}=1 and \code{initbh} is of size \code{Ls}-1, the initial
+boundary of the take-none stratum is set to the first percentile of \code{X}.\\
+
+\noindent $(4)$ The following table summarize information about elements of
+\code{algo.control}. For a complete description of every element see \code{help(strata.LH)}.
+Sethi's algorithm has only one customizable parameter, the maximal number
+of iterations \code{maxiter}. However, for Kozak's algorithm, every parameter
+in the table below apply.\\
+
+\end{small}
+
+\noindent
+\begin{footnotesize}
+\begin{tabular}{rlll}\hline
+\textbf{parameter} & \textbf{description}                             & \textbf{format}       & \textbf{default}  \\ \hline
+    \code{maxiter} & maximal number of iterations                     & positive integer      & 500 (Sethi) or    \\
+                   &                                                  &                       & 10 000 (Kozak)    \\
+     \code{minsol} & if the number of solutions is below              & integer $\geq$ 2 and  & 10 000            \\
+                   & \code{minsol} $\Rightarrow$ complete enumeration & $\leq$ 2 000 000      &                   \\
+     \code{idopti} & identification of stratum sample sizes           & \code{"nh"} or     & \code{"nh"}          \\
+                   & used in optimization criteria calculation        & \code{"nhnonint"}  &                      \\
+      \code{minNh} & minimum size for sampled strata                  & integer $\geq$ 2   & 2                    \\
+    \code{maxstep} & maximal step for boundary modification           & integer $\geq$ 2   & $^\star Nu/10$, rounded up \\
+                   &                                                  &                    & and truncated to 100 \\
+   \code{maxstill} & maximal number of iterations without             & positive integer   & \code{maxstep}*10, bounded  \\
+                   & boundary modification                            &                    & between 50 and 500 \\
+        \code{rep} & number of repetition of the algorithm            & integer $\geq$ 1   & 5                    \\
+    \code{trymany} & indicator for trying many initial                & \code{TRUE} or \code{FALSE} & \code{TRUE} \\
+                   & stratum boundaries                               &                    &                      \\\hline
+\end{tabular}
+\noindent $^\star Nu$ = number of unique values of the stratification variable $X$ (without considering the units in the certainty stratum)\\
+\end{footnotesize}
+
+
+\bigskip
+
+\bigskip
+
+
+\noindent\textbf{References}
+
+\begin{footnotesize}
+
+\begin{description}
+
+\item Baillargeon, S. and  Rivest L.-P. (2011). The construction of stratified designs in R with the package stratification. \textit{Survey Methodology}, \textbf{37}(1), 53-65. \url{ http://www.statcan.gc.ca/pub/12-001-x/2011001/article/11447-eng.pdf }
+
+\item Dalenius, T. and Hodges, J.L., Jr. (1959). Minimum variance
+stratification, {\it Journal of the American Statistical
+Association}, \textbf{54}, 88-101.
+
+\item Gunning, P. and Horgan, J. M. (2007). Improving the Lavall\'ee and Hidiroglou algorithm
+for stratification of skewed populations, \textit{Journal of
+Statistical Computation and Simulation}, \textbf{77}, 277-291
+
+\item Hidiroglou, M. A. , and Srinath, K. P.  (1993). Problems associated with designing
+    subannual business surveys, { \it Journal of Business and Economic Statistics}, {\bf 11},
+    397-405
+
+\end{description}
+
+\end{footnotesize}
+
+
+% Si le tableau est trop large, je peux mettre les noms des arguments et des fonctions en grandeur
+%footnotesize plut?t que small + je peux mettre les notes en dessous n grandeur scriptsize plut?t que footnotesize.
+
+\begin{sidewaystable}
+\begin{center}
+\begin{footnotesize}
+\begin{tabular}{rccccclll}
+\multicolumn{1}{c}{\textbf{\normalsize argument}} &
+    \rotatebox{90}{{\small \code{strata.cumrootf}}} &
+    \rotatebox{90}{{\small \code{strata.geo}}} &
+    \rotatebox{90}{{\small \code{strata.LH}}} &
+    \rotatebox{90}{{\small \code{strata.bh}}} &
+    \rotatebox{90}{{\small \code{var.strata}}} &
+        \textbf{\normalsize description} & \textbf{\normalsize format} & \textbf{\normalsize default} \\ \toprule \rowcolor[gray]{.9}
+{\small \code{x}} & \checkmark & \checkmark & \checkmark & \checkmark &  &
+    stratification variable & numeric vector & none (\code{x} is mandatory)\\
+{\small \code{bh}} & & & & \checkmark & &
+    stratum boundaries & numeric vector, length $L-1$ & none (\code{bh} is mandatory) \\ \rowcolor[gray]{.9}
+{\small \code{n}} & \checkmark & \checkmark & \checkmark & \checkmark &  &
+    target total sample size & positive integer & none (\code{n} or \code{CV} is mandatory)\\
+{\small \code{CV}} & \checkmark & \checkmark & \checkmark & \checkmark &  &
+    target CV or RRMSE & numeric & none (\code{n} or \code{CV} is mandatory)\\ \rowcolor[gray]{.9}
+{\small \code{Ls}} & \checkmark & \checkmark & \checkmark & \checkmark &  &
+    number of sampled strata & integer $\geq$ 2 & 3 \\
+{\small \code{certain}} & \checkmark & \checkmark & \checkmark & \checkmark &  &
+    \code{x}-indices for units a priori  & numeric vector & \code{NULL} (no certainty stratum) \\
+                    & & & & & & chosen to be in the sample & & \\ \rowcolor[gray]{.9}
+{\small \code{alloc}} & \checkmark & \checkmark & \checkmark & \checkmark &  &
+     allocation specification $(1)$ & list (\code{q1,q2,q3}) where \code{qi}$\geq 0$ & Neyman (\code{q1=q3=}0.5, \code{q2=}0) \\
+
+     \midrule
+
+{\small \code{takenone}} & & & \checkmark & \checkmark & &
+    number of take-none strata & 0 or 1 & 0\\ \rowcolor[gray]{.9}
+{\small \code{bias.penalty}} & & & \checkmark & \checkmark & &
+    penalty for the bias & numeric $\in [0,1]$ & 1 \\
+
+     \midrule
+
+{\small \code{takeall}} & & & \checkmark & \checkmark &  &
+    number of take-all strata & one of $\{0,1,\ldots,\code{Ls}-1\}$ & 0  \\ \rowcolor[gray]{.9}
+{\small \code{takeall.adjust}} & & & & \checkmark & &
+    indicator of adjustment & \code{TRUE} or \code{FALSE} & \code{TRUE} (as in the rest\\ \rowcolor[gray]{.9}
+                    & & & & & & for take-all strata & & of the package)\\
+
+     \midrule
+
+{\small \code{rh}} & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &
+     anticipated response rates & numeric (vector or not)  & \code{rep(1,Ls)} or \code{rh} from \code{strata} \\ \rowcolor[gray]{.9}
+{\small \code{rh.postcorr}} & & & & & \checkmark &
+    indicator of posterior & \code{TRUE} or \code{FALSE} & \code{FALSE} (no correction) \\ \rowcolor[gray]{.9}
+                    & & & & & & correction for non-response & & \\
+
+    \midrule
+
+{\small \code{model}} & \checkmark & \checkmark & \checkmark & \checkmark &  \checkmark &
+    model identification & \code{"none"}, \code{"loglinear"}, & \code{"none"} \\
+                    & & & & & & &  \code{"linear"}* or \code{"random"}* $\rightarrow$ & {\scriptsize (*unavailable with Sethi's algo)} \\ \rowcolor[gray]{.9}
+{\small \code{ model.control}} & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &
+     model's parameter & list (\code{beta}, \code{sig2}, \code{ph} \code{ptakenone}, & depends on \code{model}, but \\ \rowcolor[gray]{.9}
+                    &  &  &  &  & & specification $(2)$ & \code{pcertain}, \code{gamma}, \code{epsilon}) & equivalent to \code{model="none"}\\
+
+    \midrule
+
+{\small \code{nclass}} & \checkmark & & & & &
+    number of classes & integer $\geq$ \code{Ls} & $min(15$\code{Ls}$,Nu)$ \\ \rowcolor[gray]{.9}
+
+    \midrule
+
+{\small \code{initbh}} & & & \checkmark & &  &
+    initial stratum boundaries & numeric vector & depends on \code{algo} $(3)$ \\
+{\small \code{algo}} & & & \checkmark & &  &
+    algorithm identification & \code{"Kozak"} or \code{"Sethi"} &  \code{"Kozak"} \\ \rowcolor[gray]{.9}
+{\small \code{algo.control}} & & & \checkmark & & &
+    algorithm's parameters & list (\code{maxiter}, \code{minsol}, \code{idopti}, \code{minNh}, & depends on \code{algo} \\ \rowcolor[gray]{.9}
+                    & & & & & & specification $(4)$ & \code{maxstep}, \code{maxstill}, \code{rep}, \code{trymany}) & \\
+
+    \midrule
+
+{\small \code{strata}} & & & & & \checkmark &
+    stratified design & \code{strata} object & none (\code{strata} is mandatory) \\ \rowcolor[gray]{.9}
+{\small \code{y}} & & & & & \checkmark &
+    study variable & numeric vector & \code{NULL} (\code{model} given instead) \\
+                    \bottomrule
+\end{tabular}
+\end{footnotesize}
+\begin{center}
+\proglang{R} package \pkg{stratification} summary table
+\end{center}
+\end{center}
+\end{sidewaystable}
+
+
+\end{document}

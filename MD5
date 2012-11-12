@@ -1,13 +1,13 @@
-279adeab2adfb34c16a0768d47763da5 *DESCRIPTION
+b3469030294a80336e2a5675a60a724b *DESCRIPTION
 77696819fc5e59ddb71d123c14a89611 *NAMESPACE
-28c4c03f4bffa2a90cdbdb46a6d7f500 *NEWS
+6e74dd5940af1371f4573acbca028022 *NEWS
 b9fce145375fab340e648d07881e8a03 *R/internal.R
 db933c595e20d23fc300a5158207b274 *R/strata.LH.R
 d0a52821b148c58c01051cf076b21eb4 *R/strata.bh.R
 0b0e1b95a5970fc1123ff3f843f746bb *R/strata.rule.R
 fab313b7e686b8e0a681983473c0bb6e *R/strata.tools.R
 f2aec54dbfdc648024e115ef650d695d *R/valid_args.R
-082382d36a7a5d18947b136c62d6af2d *R/var.strata.R
+635a8e9ffa500609e1e6f7aff52481ec *R/var.strata.R
 960c1f7c9676c4fc9923cec62809f1a9 *data/Debtors.rda
 b535ecc446a4bed9ecc960d045491ef8 *data/MRTS.rda
 8d528dcf9fbf93aff3b7ef8b7ac1e8e4 *data/SHS.rda
@@ -15,6 +15,7 @@ b535ecc446a4bed9ecc960d045491ef8 *data/MRTS.rda
 0c33fdcb5b2b2655812d8e4f21e099b3 *data/USbanks.rda
 b71473e2fdd6cdc1175b9431aaec34fa *data/UScities.rda
 11cc79446b9ef096c2ff5c246913e81b *data/UScolleges.rda
+7b7c9b6c90c13e5128af3b162c33fc07 *inst/doc/stratificationSummaryTable.Rnw
 9bb6213ee2297110781b40a0e5e6ca04 *inst/doc/stratificationSummaryTable.pdf
 9de536246668360742dc552ea24ebb1c *man/CochranHorganData.Rd
 ab83e30033fcaba8bc7a299ea2d0d638 *man/MRTS.Rd
@@ -24,6 +25,7 @@ ab83e30033fcaba8bc7a299ea2d0d638 *man/MRTS.Rd
 ee68051c780d6b76447f2b5b93dc1ad5 *man/strata.bh.Rd
 b53185307ce97067b5ab06c360eec4e6 *man/strata.rule.Rd
 d3303d58a04b0779240168d08fd7aaa0 *man/strata.tool.Rd
-80ca9aca3f3e644681e388cdce1af63a *man/stratification-package.Rd
+11f7b2dcb3ec700bf9d89b03518bbadd *man/stratification-package.Rd
 9e52d390760b8b362ac2b2aefd3a1eed *man/var.strata.Rd
 c7b44a935560645822a71e2d4c8743cf *src/Ccode.c
+7b7c9b6c90c13e5128af3b162c33fc07 *vignettes/stratificationSummaryTable.Rnw
