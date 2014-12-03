@@ -1,6 +1,6 @@
-b3469030294a80336e2a5675a60a724b *DESCRIPTION
+732217267d8f14e09b393d19784d8a84 *DESCRIPTION
 77696819fc5e59ddb71d123c14a89611 *NAMESPACE
-6e74dd5940af1371f4573acbca028022 *NEWS
+e6f8e413847815ac6268d5e1555aefd9 *NEWS
 b9fce145375fab340e648d07881e8a03 *R/internal.R
 db933c595e20d23fc300a5158207b274 *R/strata.LH.R
 d0a52821b148c58c01051cf076b21eb4 *R/strata.bh.R
@@ -8,6 +8,7 @@ d0a52821b148c58c01051cf076b21eb4 *R/strata.bh.R
 fab313b7e686b8e0a681983473c0bb6e *R/strata.tools.R
 f2aec54dbfdc648024e115ef650d695d *R/valid_args.R
 635a8e9ffa500609e1e6f7aff52481ec *R/var.strata.R
+516b5d4d36229c5bb919c664396dd7bd *build/vignette.rds
 960c1f7c9676c4fc9923cec62809f1a9 *data/Debtors.rda
 b535ecc446a4bed9ecc960d045491ef8 *data/MRTS.rda
 8d528dcf9fbf93aff3b7ef8b7ac1e8e4 *data/SHS.rda
@@ -21,11 +22,11 @@ b71473e2fdd6cdc1175b9431aaec34fa *data/UScities.rda
 ab83e30033fcaba8bc7a299ea2d0d638 *man/MRTS.Rd
 7c5aaa925b50a960b7c4591412371501 *man/SHS.Rd
 8504dcff73a8378195f426b26dd8b20d *man/Sweden.Rd
-77d830042aac165424841ff6fcd6e62c *man/strata.LH.Rd
+39aeea91fb690c63606dbf4711248390 *man/strata.LH.Rd
 ee68051c780d6b76447f2b5b93dc1ad5 *man/strata.bh.Rd
 b53185307ce97067b5ab06c360eec4e6 *man/strata.rule.Rd
 d3303d58a04b0779240168d08fd7aaa0 *man/strata.tool.Rd
 11f7b2dcb3ec700bf9d89b03518bbadd *man/stratification-package.Rd
 9e52d390760b8b362ac2b2aefd3a1eed *man/var.strata.Rd
-c7b44a935560645822a71e2d4c8743cf *src/Ccode.c
+b1782f65a9926dc929720840156ca760 *src/Ccode.c
 7b7c9b6c90c13e5128af3b162c33fc07 *vignettes/stratificationSummaryTable.Rnw

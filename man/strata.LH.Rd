@@ -263,21 +263,21 @@ tn1.Sethi
 #########################################################
 ### Automatic detection of a take-all stratum
 
-data(UScities)
+# data(UScities)
 
-# As in the following example, a beneficial take-all stratum is not always detected 
-# by the algorithm. Therefore, it is often a good idea to obtain a stratified design
-# with and without a take-all stratum and to compare the results.
-sans<-strata.LH(x=UScities, n=300, Ls=3, alloc=c(0.35,0.35,0), takeall=0,
-      model="loglinear", model.control=list(beta=0.9, sig2=0, ph=1),
-      algo.control=list(trymany=FALSE))
-sans
-avec<-strata.LH(x=UScities, n=300, Ls=3, alloc=c(0.35,0.35,0), takeall=1,
-      model="loglinear", model.control=list(beta=0.9,sig2=0,ph=1),
-      algo.control=list(trymany=FALSE))
-avec
-# We see that for the target sample size, the anticipated CV is 17\% lower with a 
-# take-all stratum (0.01081053 vs 0.009002313).
+# # As in the following example, a beneficial take-all stratum is not always detected 
+# # by the algorithm. Therefore, it is often a good idea to obtain a stratified design
+# # with and without a take-all stratum and to compare the results.
+# sans<-strata.LH(x=UScities, n=300, Ls=3, alloc=c(0.35,0.35,0), takeall=0,
+#       model="loglinear", model.control=list(beta=0.9, sig2=0, ph=1),
+#       algo.control=list(trymany=FALSE))
+# sans
+# avec<-strata.LH(x=UScities, n=300, Ls=3, alloc=c(0.35,0.35,0), takeall=1,
+#       model="loglinear", model.control=list(beta=0.9,sig2=0,ph=1),
+#       algo.control=list(trymany=FALSE))
+# avec
+# # We see that for the target sample size, the anticipated CV is 17\% lower with a 
+# # take-all stratum (0.01081053 vs 0.009002313).
 
 
 #########################################################
