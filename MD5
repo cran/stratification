@@ -1,6 +1,6 @@
-732217267d8f14e09b393d19784d8a84 *DESCRIPTION
+e0ab6ea470a7986f5024319aca11b10f *DESCRIPTION
 77696819fc5e59ddb71d123c14a89611 *NAMESPACE
-e6f8e413847815ac6268d5e1555aefd9 *NEWS
+59b5df3c0cc902cdb800d3ffbd78de3e *NEWS
 b9fce145375fab340e648d07881e8a03 *R/internal.R
 db933c595e20d23fc300a5158207b274 *R/strata.LH.R
 d0a52821b148c58c01051cf076b21eb4 *R/strata.bh.R
@@ -28,5 +28,5 @@ b53185307ce97067b5ab06c360eec4e6 *man/strata.rule.Rd
 d3303d58a04b0779240168d08fd7aaa0 *man/strata.tool.Rd
 11f7b2dcb3ec700bf9d89b03518bbadd *man/stratification-package.Rd
 9e52d390760b8b362ac2b2aefd3a1eed *man/var.strata.Rd
-b1782f65a9926dc929720840156ca760 *src/Ccode.c
+0e014375111199292f2a0e935b546ab5 *src/Ccode.c
 7b7c9b6c90c13e5128af3b162c33fc07 *vignettes/stratificationSummaryTable.Rnw

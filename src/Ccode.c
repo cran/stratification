@@ -192,6 +192,8 @@ voir la description générale des paramètres au début de ce fichier.
                    (uniquement utile à get_VYs_C)}
 @return \item{phis}{Un nombre de type double : la valeur de phi pour la state s 
                     (utile à get_VYs_C et get_momentY_C)}
+                    
+Précondition : Ns est positif
 
 Créée et vérifiée avec valeurs par défaut le 26 septembre 2012
 voir wrapper R
@@ -235,6 +237,8 @@ voir la description générale au début de ce fichier pour les autres paramètr
 
 @return \item{VYs}{Un nombre de type double : la variance anticipée de Y pour les observations de la state s}
 @return \item{psis}{Un nombre de type double : la valeur de psi pour la state s (uniquement utile à get_momentY_C)}
+
+Précondition : Ns est positif
 
 Créée et vérifiée avec valeurs par défaut le 27 septembre 2012
 pas de wrapper R, fonction C seulement
@@ -304,20 +308,25 @@ void get_momentY_C (double *xnoc, int *stratumIDnoc, int *Nnoc, int *Nh, int *L,
   *TY = 0;
   for (j=0; j < *L; j++){
     int Ns = Nh[j];
-    int nstratum = j + 1;
-    double xs[Ns], EXs;
-    extract_stratum_C(&nstratum, xnoc, stratumIDnoc, Nnoc, xs);
-    get_EYs_C(xs, &Ns, nmodel, beta, sig2, &ph[j], gamma, epsilon, EX, &EYh[j], &EXs, &phih[j]);
-    get_VYs_C(xs, &Ns, &EYh[j], &EXs, &phih[j], nmodel, beta, sig2, &ph[j], gamma, epsilon, EX, EX2, 
-                  &VYh[j], &psih[j]);
-    if (Ns != 0) *TY = *TY + Ns * EYh[j];
+    if (Ns > 0) {
+      int nstratum = j + 1;
+      double xs[Ns], EXs;
+      extract_stratum_C(&nstratum, xnoc, stratumIDnoc, Nnoc, xs);
+      get_EYs_C(xs, &Ns, nmodel, beta, sig2, &ph[j], gamma, epsilon, EX, &EYh[j], &EXs, &phih[j]);
+      get_VYs_C(xs, &Ns, &EYh[j], &EXs, &phih[j], nmodel, beta, sig2, &ph[j], gamma, epsilon, EX, EX2, 
+                    &VYh[j], &psih[j]);
+      *TY = *TY + Ns * EYh[j];
+    } else {
+      /* valeurs non utilisées je crois, mais je ne prends pas de chance */
+      *EYh = *VYh = *phih = *psih = 0;
+    }
   }
-  if (*Nc != 0) *TY = *TY + *Nc * *EYc; /* Ajout a TY pour la strate certain */
+  if (*Nc > 0) *TY = *TY + *Nc * *EYc; /* Ajout a TY pour la strate certain */
   
   *TAY = 0;
   if (*takenone>0){
 		for (j=0; j < *takenone; j++) {
-      if (Nh[j] != 0) *TAY = *TAY + Nh[j] * EYh[j];	      
+      if (Nh[j] > 0) *TAY = *TAY + Nh[j] * EYh[j];	      
 		}
   }
 } 
@@ -1235,4 +1244,5 @@ Rprintf("\n");*/
   *nrowiter = irow;
   
 }
+
 
