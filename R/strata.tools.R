@@ -83,7 +83,7 @@ function(x,...)
     cat("\nTotal sample size:",x$n,"\n")
     cat("Anticipated population mean:",x$mean,"\n")
     
-    # Section sur les moments anticipés
+    # Section sur les moments anticipes
     sortie <- if (is.null(x$args$takenone)) 1 else { if(0==x$args$takenone) 2 else 3 }
     if (sortie%in%c(1,2)) {
         cat("Anticipated CV:",ifelse(1==sortie,x$CV,x$RRMSE),"\n")
@@ -108,7 +108,7 @@ function(x,logscale=FALSE,drop=0,main=paste("Graphical Representation of the Str
     if (!((length(drop)==1)&&isTRUE((drop%%1)==0)&&(isTRUE(drop>=0)||isTRUE(drop<x$Nh[L]))))
         stop("'drop' must be an integer between 0 and 'Nh[L]'-1 inclusively")
     data <- if(is.null(x$args$certain)) sort(x$args$x) else sort(x$args$x[-x$args$certain])     
-    data <- data[1:(length(data)-drop)] # pour enlever les drop données les plus grandes
+    data <- data[1:(length(data)-drop)] # pour enlever les drop donnees les plus grandes
     if(logscale) data <- log(data)
     bh <- if (identical(as.character(x$call[[1]]),"strata.bh")) x$args$bh else x$bh
     bhfull <- if(logscale) c(min(data),log(bh),max(data)+1) else c(min(data),bh,max(data)+1)
@@ -131,7 +131,7 @@ function(x,logscale=FALSE,drop=0,main=paste("Graphical Representation of the Str
     abline(h=2)
     space <- bhfull[-1]-bhfull[-(L+1)]
     lcert <- (bhfull[L+1]-bhfull[1])/10 # largeur pour la strate certaine
-    off <- (bhfull[L+1]-bhfull[1])*0.04 # offset par défaut pour les axes dans les graphiques en R 
+    off <- (bhfull[L+1]-bhfull[1])*0.04 # offset par defaut pour les axes dans les graphiques en R 
     if (!is.null(x$args$certain)) space <- c(space[-L],space[L]-lcert,lcert)
     if (any(space<(bhfull[L+1]-bhfull[1])/15)) {
         space <- rep(bhfull[L+1]-bhfull[1]+off*2,L+ncert)/(L+ncert)

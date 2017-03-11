@@ -1,9 +1,12 @@
-useDynLib(stratification)
+useDynLib(stratification, .registration = TRUE)
 
 export(strata.bh,strata.cumrootf,strata.geo,strata.LH,var.strata)
 
-importFrom(graphics, plot)
-
+importFrom(graphics, plot, abline, hist, layout, mtext, par, text)
+importFrom(grDevices, rgb)
+importFrom(stats, quantile, var)
+importFrom(utils, combn)
+     
 S3method(print, strata)
 S3method(plot, strata)
 S3method(print, var.strata)

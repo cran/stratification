@@ -1,3 +1,12 @@
+Changes in Version 2.2-6
+
+  o Bug fixes dealing with numerical imprecision.
+  
+  o The package now uses native routines registration.
+  
+  o DESCRIPTION and NAMESPACE file updated in order to fulfill new CRAN requirements.
+  
+
 Changes in Version 2.2-5
 
   o Bug fix in C code.

@@ -7,13 +7,13 @@ strata.bh <- function(x, bh, n = NULL, CV = NULL, Ls = 3, certain = NULL, alloc 
     # Validation des arguments et initialisation de variables :
     call.ext <- match.call()
     out <- valid_args(obj_fct = as.list(environment()), call.ext = call.ext)
-    # Variables générales
+    # Variables generales
     N <- out$N; findn <- out$findn; L <- out$L; rhL <- out$rhL;
-    # Arguments possiblement reformatés (si donnés sous forme logique, ramenés au type numérique)
+    # Arguments possiblement reformates (si donnes sous forme logique, ramenes au type numerique)
     takenone <- out$takenone; takeall <- out$takeall;
-    # Variables relatives à la strate certain
+    # Variables relatives a la strate certain
     certain <- out$certain; xnoc <- out$xnoc; Nc <- out$Nc; Nnoc <- out$Nnoc;
-    # Variables relatives à l'allocation
+    # Variables relatives a l'allocation
     q1 <- out$q1; q2 <- out$q2; q3 <- out$q3;
     # Variables relatives au model
     nmodel <- out$nmodel; beta <- out$beta; sig2 <- out$sig2; ph <- out$ph; pcertain <- out$pcertain; 
@@ -21,40 +21,40 @@ strata.bh <- function(x, bh, n = NULL, CV = NULL, Ls = 3, certain = NULL, alloc 
     # Variable pour la sortie : liste des arguments
     args <- out$args;  
     
-    # Initialisation de quelques simples stat calculées sur les données
+    # Initialisation de quelques simples stat calculees sur les donnees
     out <- init_stat(obj_fct = as.list(environment()))
     EX <- out$EX;  EX2 <- out$EX2; EYc <- out$EYc;
     
-    # Détermination des bornes pleines
+    # Determination des bornes pleines
     bhfull <- c(min(x), bh, max(x) + 1)
     
-    # Calculs et sortie des résultats
+    # Calculs et sortie des resultats
     strata.bh.internal(bhfull = bhfull, takeallin = takeall, takeall.adjust = takeall.adjust, 
                        obj_fct = as.list(environment()))
 }
 
 
 # Version interne qui fait le bout commun aux fonctions strata.bh, strata.geo, strata.cumrootf et qui
-# est même utilisé par strata.LH
+# est meme utilise par strata.LH
 strata.bh.internal <- function(bhfull, takeallin, takeall.adjust, obj_fct)
 {
   # Pour tirer de obj_fct les variables dont on a besoin ici :
-  # Variables générales tirées des arguments donnés en entrée à la fonction externe
+  # Variables generales tirees des arguments donnes en entree a la fonction externe
   N <- obj_fct$N; xnoc <- obj_fct$xnoc; Nnoc <- obj_fct$Nnoc; L <- obj_fct$L; 
   takenone <- obj_fct$takenone; bias.penalty <- obj_fct$bias.penalty; rhL <- obj_fct$rhL;
-  # Variables relatives à la cible à atteindre
+  # Variables relatives a la cible a atteindre
   findn <- obj_fct$findn; n <- obj_fct$n; CV <- obj_fct$CV;
-  # Variables relatives à l'allocation
+  # Variables relatives a l'allocation
   q1 <- obj_fct$q1; q2 <- obj_fct$q2; q3 <- obj_fct$q3;
   # Variables relatives au model
   nmodel <- obj_fct$nmodel; beta <- obj_fct$beta; sig2 <- obj_fct$sig2; ph <- obj_fct$ph; 
   gamma <- obj_fct$gamma; epsilon <- obj_fct$epsilon; EX <- obj_fct$EX; EX2 <- obj_fct$EX2;
-  # Variables relatives à la strate certain calculées préalablement
+  # Variables relatives a la strate certain calculees prealablement
   Nc <- obj_fct$Nc; EYc <- obj_fct$EYc;
   # Variable pour la sortie : liste des arguments
   args <- obj_fct$args; call.ext <- obj_fct$call.ext 
   
-  # Valeurs à calculer :
+  # Valeurs a calculer :
   out <- strata_bh_opti(bhfull = bhfull, takeallin = takeallin, takeall.adjust = takeall.adjust, 
                         dotests = FALSE, obj_fct = as.list(environment()))
   stratumIDnoc <- out$stratumIDnoc; Nh <- out$Nh;  EYh <- out$EYh;  VYh <- out$VYh;  TY <- out$TY;  
@@ -72,10 +72,10 @@ strata.bh.internal <- function(bhfull, takeallin, takeall.adjust, obj_fct)
     warning("divisions by zero occured in the computations, therefore some statistics do not have finite values", call. = FALSE)
   }
   
-  # Objet à reformater pour la sortie :
+  # Objet a reformater pour la sortie :
   stratumID <- get_stratumID(obj_fct = as.list(environment()))
   
-  # Sortie des résultats  
+  # Sortie des resultats  
   out <- list(Nh=Nh, nh=nh, n=n, nhnonint=nhnonint, certain.info=c(Nc=Nc, meanc=EYc),
               opti.nh=opti.nh, opti.nhnonint=opti.nhnonint, meanh=EYh, varh=VYh, mean=TY/N)
   out <- c(out, out_stat)

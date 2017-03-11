@@ -1,5 +1,6 @@
 \documentclass[10pt]{article}
 
+
 \usepackage{amsmath} % Pour utiliser la commande \boldsymbol qui permet de mettre des lettres grecs en gras
 \usepackage{amssymb} % Pour utiliser \checkmark
 \usepackage[table]{xcolor} % Pour avoir des lignes avec une couleur de fond dans une table

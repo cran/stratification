@@ -1,113 +1,113 @@
 #include <R.h>
 #include <Rmath.h>
 
-/* Note : le code contient des Rprintf en commentaires. Ceux-ci servent à débugger le code au besoin
+/* Note : le code contient des Rprintf en commentaires. Ceux-ci servent a debugger le code au besoin
 
 Exemples de commandes pour afficher dans la console R
    for (j=0; j < *L-1; j++) Rprintf("%d  ",pbh[j]); Rprintf("%d  ",isup ); Rprintf("\n");
    Rprintf("%f  ",TY ); Rprintf("\n");
    
-%d = entier (integer), %f = réel (double)  */
+%d = entier (integer), %f = reel (double)  */
 
 
-/* Définition des paramètres communs à plusieurs fonctions 
+/* Definition des parametres communs a plusieurs fonctions 
 
-Un nom de paramètre représente toujours la même chose.
-Deux suffixes reviennent à quelques reprises :
+Un nom de parametre represente toujours la meme chose.
+Deux suffixes reviennent a quelques reprises :
 ...noc : no certainty stratum (n'inclut pas la strate certain)
 ...nonint : non integer (non entier)
 
-## arguments en lien avec les données et créés en R :
+## arguments en lien avec les donnees et crees en R :
 
-@param xnoc observations de la variable de stratification données en entrée, exlcuant les  
+@param xnoc observations de la variable de stratification donnees en entree, excluant les  
             observations pour la certainty stratum
-@param Nnoc nombre total d'observations après avoir retiré les observations pour la certainty stratum
+@param Nnoc nombre total d'observations apres avoir retire les observations pour la certainty stratum
             (longueur de xnoc et de stratumIDnoc) 
-@param x1noc vecteur des valeurs uniques, ordonnées de la plus petite à la plus grande, 
-          dans les observations de la variable de stratification données en entrée, exlcuant les  
+@param x1noc vecteur des valeurs uniques, ordonnees de la plus petite a la plus grande, 
+          dans les observations de la variable de stratification donnees en entree, excluant les  
             observations pour la certainty stratum (xnoc)
 @param N1noc nombre de valeurs uniques dans les observations xnoc (longueur de x1noc)
 @param Nc le nombre d'observations dans la strate certain
-@param EYc l'espérance anticipée de Y dans la strate certain
+@param EYc l'esperance anticipee de Y dans la strate certain
 @param EX moyenne de toutes les observations, peu importe leur strate, incluant les obs de la strate certain
-          (utile au modèle random)
-@param EX2 moyenne de toutes les observations au carré, peu importe leur strate, incluant les obs de la strate certain
-           (utile au modèle random)
+          (utile au modele random)
+@param EX2 moyenne de toutes les observations au carre, peu importe leur strate, incluant les obs de la strate certain
+           (utile au modele random)
 
-## arguments qui sont en fait des arguments données en entrée à une
-   fonction R publique (et possiblement formaté) :
+## arguments qui sont en fait des arguments donnees en entree a une
+   fonction R publique (et possiblement formate) :
    
 @param bhfull les bornes des strates, incluant b0 et bL (vecteur de longueur L + 1)
 @param L nombre total de strates (ne compte pas la strate certain) 
-         -> L doit être >=2 pour assurer le bon fonctionnement des fonctions
+         -> L doit etre >=2 pour assurer le bon fonctionnement des fonctions
 @param takenone le nombre de strate take-none : 0 ou 1
 @param takeall le nombre de strate take-all : 0, 1, ou plus rarement un nombre entier > 1
-@param q1 le premier exposant définissant l'allocation
-@param q2 le deuxième exposant définissant l'allocation
-@param q3 le troisième exposant définissant l'allocation
+@param q1 le premier exposant definissant l'allocation
+@param q2 le deuxieme exposant definissant l'allocation
+@param q3 le troisieme exposant definissant l'allocation
 @param findn indicatrice : 1 si on a un CV cible, 0 si on  un n cible
-@param n le n cible donné en entrée
-@param CV RRMSE cible donné en entrée à une fonction externe
-@param rhL taux de réponse : vecteur de longueur L dont la première valeur est 1 s'il y a une strate takenone,
-           donc qui n'est pas nécessairement identique au rh donné en entrée à une fonction externe.
-           (La valeur 1 est sans importance car elle n'est pas utilisée. C'est la position des autres valeurs 
+@param n le n cible donne en entree
+@param CV RRMSE cible donne en entree a une fonction externe
+@param rhL taux de reponse : vecteur de longueur L dont la premiere valeur est 1 s'il y a une strate takenone,
+           donc qui n'est pas necessairement identique au rh donne en entree a une fonction externe.
+           (La valeur 1 est sans importance car elle n'est pas utilisee. C'est la position des autres valeurs 
             qui est importante.) 
-@param biaspenalty argument donné en entrée à une fonction externe
-@param nmodelID un identifiant du modèle 0 = none, 1 = loglinear, 2 = linear, 3 =  random
+@param biaspenalty argument donne en entree a une fonction externe
+@param nmodelID un identifiant du modele 0 = none, 1 = loglinear, 2 = linear, 3 =  random
 @param beta
 @param sig2
 @param ps 
-@param ph vecteur de longueur L pour les taux de mortalité dans les L strates 
+@param ph vecteur de longueur L pour les taux de mortalite dans les L strates 
 @param gamma
 @param epsilon
-@param minNh paramètre de l'algo donné en entrée à la fonction externe : 
-             valeur minimale de Nh acceptée pour les strates échantillonnées (take-some et take-all)
+@param minNh parametre de l'algo donne en entree a la fonction externe : 
+             valeur minimale de Nh acceptee pour les strates echantillonnees (take-some et take-all)
 
 ## arguments pour des fonctions C internes
 
-@param xs le vecteur double des observations dans une state spécifique (notée strate s)
+@param xs le vecteur double des observations dans une state specifique (notee strate s)
 @param Ns le nombre d'observations dans la strate s (longueur de xs)
-@param nhcalcul les nh choisis pour faire le calcul, parfois des réels, d'autres fois des entiers
+@param nhcalcul les nh choisis pour faire le calcul, parfois des reels, d'autres fois des entiers
 
 ## arguments qui sont obtenus d'une fonction C
 
-@param stratumIDnoc tel que créé par get_stratumIDnoc_C
+@param stratumIDnoc tel que cree par get_stratumIDnoc_C
 @param Nh vecteur de longueur L des tailles de populations obtenu de get_Nh_C
-@param VYh la variance anticipée de Y dans chaque strate obtenue de get_momentY_C
+@param VYh la variance anticipee de Y dans chaque strate obtenue de get_momentY_C
 @param ah vecteur de longueur L : ah pour les strates take-some, 0 pour les autres strates, obtenu de get_ah_C
 @param TCN la somme des tailles de populations Nh pour les strates take-all (C), obtenue de get_nnonint_C
-@param nhnonint un vecteur de L nombres réels : les tailles d'échantillon dans les L strates, 
-                issues de l'application de la règle d'allocation, obtenu de get_nhnonint_C                
-@param TAY la somme anticipée de Y dans les strates take-none, obtenue de get_momentY_C
+@param nhnonint un vecteur de L nombres reels : les tailles d'echantillon dans les L strates, 
+                issues de l'application de la regle d'allocation, obtenu de get_nhnonint_C                
+@param TAY la somme anticipee de Y dans les strates take-none, obtenue de get_momentY_C
 
 */
 
-/* Définition des valeurs retournées (ou plutôt modifiées) communes à plusieurs fonctions
+/* Definition des valeurs retournees (ou plutot modifiees) communes a plusieurs fonctions
 
-@return stratumIDnoc un vecteur de longueur Nnoc contenant les chiffres 1 à L, identifiant la strate
-                     à laquelle chaque observation appartient
+@return stratumIDnoc un vecteur de longueur Nnoc contenant les chiffres 1 a L, identifiant la strate
+                     a laquelle chaque observation appartient
 @return Nh vecteur de longueur L des tailles de populations
-@return EYh Un vecteur de longueur L : l'espérance anticipée de Y dans chaque strate
-@return VYh Un vecteur de longueur L : la variance anticipée de Y dans chaque strate
-@return TY Un nombre de type double : la somme gloable anticipée de Y (incluant la certainty stratum)
-@return nhnonint un vecteur de L nombre réel : les tailles d'échantillon dans les L strates, 
-                        issues de l'application de la règle d'allocation
+@return EYh Un vecteur de longueur L : l'esperance anticipee de Y dans chaque strate
+@return VYh Un vecteur de longueur L : la variance anticipee de Y dans chaque strate
+@return TY Un nombre de type double : la somme gloable anticipee de Y (incluant la certainty stratum)
+@return nhnonint un vecteur de L nombre reel : les tailles d'echantillon dans les L strates, 
+                        issues de l'application de la regle d'allocation
 @return nh les tailles d'echantillon entieres pour les L strates = nhnonint arrondies.
 */
 
 /* ******************************************************************************************** */
 
-/* Détermination des strates en ne considérant pas la strate certain
+/* Determination des strates en ne considerant pas la strate certain
 
 Pour chaque observation, cette fonction identifie sa strate.
 
-Aucun paramètre n'est unique à cette fonction, 
-voir la description générale des paramètres au début de ce fichier.
+Aucun parametre n'est unique a cette fonction, 
+voir la description generale des parametres au debut de ce fichier.
 
-Aucune valeur retournée (ou modifiée) n'est unique à cette fonction, 
-voir la description générale des sorties au début de ce fichier.
+Aucune valeur retournee (ou modifiee) n'est unique a cette fonction, 
+voir la description generale des sorties au debut de ce fichier.
   
-Créée et vérifiée le 26 septembre 2012
+Creee et verifiee le 26 septembre 2012
 voir wrapper R
 */
 void get_stratumIDnoc_C (double *xnoc, int *Nnoc, double *bhfull, int *L,
@@ -121,20 +121,20 @@ void get_stratumIDnoc_C (double *xnoc, int *Nnoc, double *bhfull, int *L,
 			}
 		}
 	}
-  /* La fonction retourne un résultat même si bhfull est illogique (voir testDevel.R) */
+  /* La fonction retourne un resultat meme si bhfull est illogique (voir testDevel.R) */
 }
 
 /* ******************************************************************************************** */
 
-/* Détermination des tailles de population dans les strates (sans considérer la strate certain)
+/* Determination des tailles de population dans les strates (sans considerer la strate certain)
 
-Aucun paramètre n'est unique à cette fonction, 
-voir la description générale des paramètres au début de ce fichier.
+Aucun parametre n'est unique a cette fonction, 
+voir la description generale des parametres au debut de ce fichier.
 
-Aucune valeur retournée (ou modifiée) n'est unique à cette fonction, 
-voir la description générale des sorties au début de ce fichier.
+Aucune valeur retournee (ou modifiee) n'est unique a cette fonction, 
+voir la description generale des sorties au debut de ce fichier.
 
-Créée et vérifiée le 26 septembre 2012
+Creee et verifiee le 26 septembre 2012
 voir wrapper R
 */
 void get_Nh_C (int *stratumIDnoc, int *Nnoc, int *L,
@@ -157,12 +157,12 @@ void get_Nh_C (int *stratumIDnoc, int *Nnoc, int *L,
 
 /* Fonction qui extrait les observations d'une strate
 
-@param nstatum le numéro de la strate que l'on souhaite extraire
-voir la description générale au début de ce fichier pour les autres paramètres.
+@param nstatum le numero de la strate que l'on souhaite extraire
+voir la description generale au debut de ce fichier pour les autres parametres.
 
 @return xs observations pour la strate nstratum
 
-Créée et vérifiée avec valeurs par défaut le 27 septembre 2012
+Creee et verifiee avec valeurs par defaut le 27 septembre 2012
 pas de wrapper R, fonction C seulement
 */
 void extract_stratum_C (int *nstratum, double *xnoc, int *stratumIDnoc, int *Nnoc,
@@ -180,22 +180,22 @@ void extract_stratum_C (int *nstratum, double *xnoc, int *stratumIDnoc, int *Nno
 
 /* ******************************************************************************************** */
 
-/* Obtention de E[Y] pour une strate spécifique s
+/* Obtention de E[Y] pour une strate specifique s
 
-Calcul l'espérance anticipée de Y pour les observations d'une seule strate, la state s.
+Calcul l'esperance anticipee de Y pour les observations d'une seule strate, la state s.
 
-Aucun paramètre n'est unique à cette fonction, 
-voir la description générale des paramètres au début de ce fichier.
+Aucun parametre n'est unique a cette fonction, 
+voir la description generale des parametres au debut de ce fichier.
 
-@return \item{EYs}{Un nombre de type double : l'espérance anticipée de Y pour les observations de la state s}
-@return \item{EXs}{Un nombre de type double : l'espérance de X pour les observations de la state s 
-                   (uniquement utile à get_VYs_C)}
+@return \item{EYs}{Un nombre de type double : l'esperance anticipee de Y pour les observations de la state s}
+@return \item{EXs}{Un nombre de type double : l'esperance de X pour les observations de la state s 
+                   (uniquement utile a get_VYs_C)}
 @return \item{phis}{Un nombre de type double : la valeur de phi pour la state s 
-                    (utile à get_VYs_C et get_momentY_C)}
+                    (utile a get_VYs_C et get_momentY_C)}
                     
-Précondition : Ns est positif
+Precondition : Ns est positif
 
-Créée et vérifiée avec valeurs par défaut le 26 septembre 2012
+Creee et verifiee avec valeurs par defaut le 26 septembre 2012
 voir wrapper R
 */
 void get_EYs_C (double *xs, int *Ns, int *nmodel, 
@@ -204,7 +204,7 @@ void get_EYs_C (double *xs, int *Ns, int *nmodel,
 {
   int i;  
   
-  /* Première étape : sommes */
+  /* Premiere etape : sommes */
   *EXs = *phis = 0;
   for (i = 0; i < *Ns; i++){ 
     if (*nmodel == 1) {
@@ -214,7 +214,7 @@ void get_EYs_C (double *xs, int *Ns, int *nmodel,
     }
   }
   
-  /* Deuxième étape : multiplications ou divisions */
+  /* Deuxieme etape : multiplications ou divisions */
   if (*nmodel == 1) {
     *EYs = *ps * *phis / *Ns;
   } else {
@@ -226,21 +226,21 @@ void get_EYs_C (double *xs, int *Ns, int *nmodel,
 
 /* ******************************************************************************************** */
 
-/* Obtention de Var[Y] pour une strate spécifique s
+/* Obtention de Var[Y] pour une strate specifique s
 
-Calcul la variance anticipée de Y pour les observations d'une seule strate, la state s.
+Calcul la variance anticipee de Y pour les observations d'une seule strate, la state s.
 
-@param EYs l'espérance anticipée de Y pour les observations de la state s obtenue de get_EYs_C 
-@param EXs l'espérance de X pour les observations de la state s obtenue de get_EYs_C
+@param EYs l'esperance anticipee de Y pour les observations de la state s obtenue de get_EYs_C 
+@param EXs l'esperance de X pour les observations de la state s obtenue de get_EYs_C
 @param phis la valeur de phi pour la state s obtenue de get_EYs_C
-voir la description générale au début de ce fichier pour les autres paramètres.
+voir la description generale au debut de ce fichier pour les autres parametres.
 
-@return \item{VYs}{Un nombre de type double : la variance anticipée de Y pour les observations de la state s}
-@return \item{psis}{Un nombre de type double : la valeur de psi pour la state s (uniquement utile à get_momentY_C)}
+@return \item{VYs}{Un nombre de type double : la variance anticipee de Y pour les observations de la state s}
+@return \item{psis}{Un nombre de type double : la valeur de psi pour la state s (uniquement utile a get_momentY_C)}
 
-Précondition : Ns est positif
+Precondition : Ns est positif
 
-Créée et vérifiée avec valeurs par défaut le 27 septembre 2012
+Creee et verifiee avec valeurs par defaut le 27 septembre 2012
 pas de wrapper R, fonction C seulement
 */
 void get_VYs_C (double *xs, int *Ns, double *EYs, double *EXs, double *phis, int *nmodel, 
@@ -250,7 +250,7 @@ void get_VYs_C (double *xs, int *Ns, double *EYs, double *EXs, double *phis, int
   int i;  
   double EX2s = 0, EXgammas = 0, VXs;
   
-  /* Première étape : sommes */
+  /* Premiere etape : sommes */
   *psis = 0;
   for (i = 0; i < *Ns; i++){ 
     if (*nmodel == 1) {
@@ -261,7 +261,7 @@ void get_VYs_C (double *xs, int *Ns, double *EYs, double *EXs, double *phis, int
     }
   }
   
-  /* Deuxième étape : multiplications ou divisions */
+  /* Deuxieme etape : multiplications ou divisions */
   if (*nmodel == 1) {
     *VYs = *ps * ( (exp(*sig2) * *psis / *Ns) - (*ps * R_pow(*phis / *Ns, 2)) );
   } else {
@@ -271,31 +271,31 @@ void get_VYs_C (double *xs, int *Ns, double *EYs, double *EXs, double *phis, int
     if (*nmodel == 3) *VYs = (1 - *epsilon) * EX2s + *epsilon * *EX2 - R_pow(*EYs, 2);
   }
   
-  /* Dernière étape : ajustement cas extrême */
+  /* Derniere etape : ajustement cas extreme */
   if (*VYs < 0) *VYs = 0;
-  /* Cet ajustement est utile dans un cas où tous les individus d'une strate ont la meme valeur,
-     donc la variance est nulle. Mais à cause de l'écriture de notre formule pour VYs, on obtient
-     plutôt VYh[j]=-0. Cette valeur négative peut ensuite faire planter R dans get_gammah_C lors
-     de l'éxécution de la fonction R_pow(VYh[j],*q3) si q3 n'est pas entier. */
+  /* Cet ajustement est utile dans un cas ou tous les individus d'une strate ont la meme valeur,
+     donc la variance est nulle. Mais a cause de l'ecriture de notre formule pour VYs, on obtient
+     plutot VYh[j]=-0. Cette valeur negative peut ensuite faire planter R dans get_gammah_C lors
+     de l'execution de la fonction R_pow(VYh[j],*q3) si q3 n'est pas entier. */
 }
 
 /* ******************************************************************************************** */
 
 /* Obtention de E[Y], Var[Y] pour toutes les strates (excluant la strate certain) + TY et TAY
 
-Calcul des espérances et variances anticipées de Y pour les observations de chacune des L strates.
+Calcul des esperances et variances anticipees de Y pour les observations de chacune des L strates.
 Aussi, calcul de TY et TAY.
 
-voir la description générale au début de ce fichier pour les autres paramètres.
+voir la description generale au debut de ce fichier pour les autres parametres.
 
 @return \item{phih}{Un vecteur de longueur L : la valeur de phi dans chaque strate 
-                   (uniquement utile à l'algo de Sethi dans la fonction R strata.LH)}
+                   (uniquement utile a l'algo de Sethi dans la fonction R strata.LH)}
 @return \item{psih}{Un vecteur de longueur L : la valeur de psi dans chaque strate
-                   (uniquement utile à l'algo de Sethi dans la fonction R strata.LH)}
-@return \item{TAY}{Un nombre de type double : la somme anticipée de Y dans les strates take-none}
-voir la description générale au début de ce fichier pour les autres valeurs en sortie.
+                   (uniquement utile a l'algo de Sethi dans la fonction R strata.LH)}
+@return \item{TAY}{Un nombre de type double : la somme anticipee de Y dans les strates take-none}
+voir la description generale au debut de ce fichier pour les autres valeurs en sortie.
 
-Créée et vérifiée avec valeurs par défaut le 27 septembre 2012
+Creee et verifiee avec valeurs par defaut le 27 septembre 2012
 voir wrapper R
 */
 void get_momentY_C (double *xnoc, int *stratumIDnoc, int *Nnoc, int *Nh, int *L, int *Nc, double *EYc, int *takenone,
@@ -317,7 +317,7 @@ void get_momentY_C (double *xnoc, int *stratumIDnoc, int *Nnoc, int *Nh, int *L,
                     &VYh[j], &psih[j]);
       *TY = *TY + Ns * EYh[j];
     } else {
-      /* valeurs non utilisées je crois, mais je ne prends pas de chance */
+      /* valeurs non utilisees je crois, mais je ne prends pas de chance */
       *EYh = *VYh = *phih = *psih = 0;
     }
   }
@@ -335,12 +335,12 @@ void get_momentY_C (double *xnoc, int *stratumIDnoc, int *Nnoc, int *Nh, int *L,
 
 /* Obtention de gammah pour les L strates, dans le but de faire l'allocation
 
-@param EYh l'espérance anticipée de Y dans chaque strate obtenue de get_momentY_C
-voir la description générale au début de ce fichier pour les autres paramètres.
+@param EYh l'esperance anticipee de Y dans chaque strate obtenue de get_momentY_C
+voir la description generale au debut de ce fichier pour les autres parametres.
 
 @return \item{gammah}{Un vecteur de longueur L : gammah pour toutes les strates}
 
-Créée et vérifiée le 27 septembre 2012
+Creee et verifiee le 27 septembre 2012
 */
 void get_gammah_C (int *Nh, double *EYh, double *VYh, int *L, double *q1, double *q2, double *q3,
                       /* Sortie */ double *gammah)
@@ -355,20 +355,20 @@ void get_gammah_C (int *Nh, double *EYh, double *VYh, int *L, double *q1, double
 
 /* Obtention de ah pour les strates take-some uniquement, dans le but de faire l'allocation
 
-Cette fonction calcule aussi TCN car cette valeur est utile à get_nnoc_C, qu'on utilise seulement
-avec un CV cible, mais aussi à la fonction get_nhnonint_C qui est utilisé peu importe le type
+Cette fonction calcule aussi TCN car cette valeur est utile a get_nnoc_C, qu'on utilise seulement
+avec un CV cible, mais aussi a la fonction get_nhnonint_C qui est utilise peu importe le type
 de cible (CV ou n).
 
 @param gammah vecteur gammah pour les L strates, obtenu de get_gammah_C
-voir la description générale au début de ce fichier pour les autres paramètres.
+voir la description generale au debut de ce fichier pour les autres parametres.
 
 @return \item{ah}{Un vecteur de longueur L : ah pour les strates take-some, 0 pour les autres strates}
 @return \item{TCN}{un nombre entier : la somme des tailles de populations Nh pour les strates take-all}
-@return \item{U2}{Un nombre réel : U2 = sommes des gamma des strates take-some
-                  (uniquement utile à l'algo de Sethi dans la fonction R strata.LH)}
+@return \item{U2}{Un nombre reel : U2 = sommes des gamma des strates take-some
+                  (uniquement utile a l'algo de Sethi dans la fonction R strata.LH)}
 }
 
-Créée et vérifiée le 27 septembre 2012
+Creee et verifiee le 27 septembre 2012
 */
 void get_ah_C (double *gammah, int *Nh, int *L, int *takenone, int *takeall,
                    /* Sortie */ double *ah, int *TCN, double *U2)
@@ -389,17 +389,17 @@ void get_ah_C (double *gammah, int *Nh, int *L, int *takenone, int *takeall,
 
 /* ******************************************************************************************** */
 
-/* Obtention de nnoc réel, uniquement utile dans le cas d'un CV cible
+/* Obtention de nnoc reel, uniquement utile dans le cas d'un CV cible
 
-@param TY la somme gloable anticipée de Y (incluant la certainty stratum), obtenue de get_momentY_C
-voir la description générale au début de ce fichier pour les autres paramètres.
+@param TY la somme gloable anticipee de Y (incluant la certainty stratum), obtenue de get_momentY_C
+voir la description generale au debut de ce fichier pour les autres parametres.
 
-@return \item{nnoc}{un nombre réel : la taille d'échantillon permettant d'atteindre le CV cible 
+@return \item{nnoc}{un nombre reel : la taille d'echantillon permettant d'atteindre le CV cible 
                        (excluant la strate certain)}
-@return \item{U}{Un nombre réel : U (uniquement utile à l'algo de Sethi dans la fonction R strata.LH)}
-@return \item{V}{Un nombre réel : V (uniquement utile à l'algo de Sethi dans la fonction R strata.LH)}
+@return \item{U}{Un nombre reel : U (uniquement utile a l'algo de Sethi dans la fonction R strata.LH)}
+@return \item{V}{Un nombre reel : V (uniquement utile a l'algo de Sethi dans la fonction R strata.LH)}
 
-Créée et vérifiée le 27 septembre 2012
+Creee et verifiee le 27 septembre 2012
 */
 void get_nnoc_C (double *CV, int *Nh, double *ah, double *VYh, double *rhL, int *L, 
                       int *takenone, int *takeall, double *biaspenalty, double *TAY, double *TY, int *TCN, 
@@ -431,20 +431,20 @@ void get_nnoc_C (double *CV, int *Nh, double *ah, double *VYh, double *rhL, int 
 
 /* ******************************************************************************************** */
 
-/* Allocation = obtention des taille d'échantillon nh réel pour les L strates
+/* Allocation = obtention des taille d'echantillon nh reel pour les L strates
 
 @param ntargetnoc le n cible de l'allocation, en excluant la strate certain
                   Cet argument est de type double car dans le cas d'un CV cible on fournira un nombre
-                  réel obtenu de la fonction get_nnoc_C. Cependant, dans le cas d'un n cible,
-                  le ntargetnoc est le n cible auquel on soustrait Nc. Il s'agira donc à l'origine
-                  d'un entier, que l'on devra convertir en double afin de pouvoir le donner en entrée
-                  à get_nhnonint_C.
-voir la description générale au début de ce fichier pour les autres paramètres.
+                  reel obtenu de la fonction get_nnoc_C. Cependant, dans le cas d'un n cible,
+                  le ntargetnoc est le n cible auquel on soustrait Nc. Il s'agira donc a l'origine
+                  d'un entier, que l'on devra convertir en double afin de pouvoir le donner en entree
+                  a get_nhnonint_C.
+voir la description generale au debut de ce fichier pour les autres parametres.
 
-Aucune valeur retournée (ou modifiée) n'est unique à cette fonction, 
-voir la description générale des sorties au début de ce fichier.
+Aucune valeur retournee (ou modifiee) n'est unique a cette fonction, 
+voir la description generale des sorties au debut de ce fichier.
 
-Créée et vérifiée le 27 septembre 2012
+Creee et verifiee le 27 septembre 2012
 */
 void get_nhnonint_C (double *ntargetnoc, int *TCN, int *Nh, double *ah, int *L, int *takenone, int *takeall, 
                          /* Sortie */ double *nhnonint)
@@ -467,26 +467,26 @@ void get_nhnonint_C (double *ntargetnoc, int *TCN, int *Nh, double *ah, int *L, 
 
 /* ******************************************************************************************** */
 
-/* simple vérification : doit-on faire un ajustement pour strate take-all?
+/* simple verification : doit-on faire un ajustement pour strate take-all?
 
-Aucun paramètre n'est unique à cette fonction, 
-voir la description générale des paramètres au début de ce fichier.
+Aucun parametre n'est unique a cette fonction, 
+voir la description generale des parametres au debut de ce fichier.
 
-@return takeall ici la valeur de takeall peut être modifiée, en étant augmentée de 1
-@return valid vaut 0 si on a besoin de faire un ajustement (la valeur de takeall a été modifiée), 
-                   1 si aucun ajustement n'est nécessaire
+@return takeall ici la valeur de takeall peut etre modifiee, en etant augmentee de 1
+@return valid vaut 0 si on a besoin de faire un ajustement (la valeur de takeall a ete modifiee), 
+                   1 si aucun ajustement n'est necessaire
 
-Créée et vérifiée le 28 septembre 2012
+Creee et verifiee le 28 septembre 2012
 */
 void verif_takeall_C (double *nhnonint, int *Nh, int *L, int *takenone, 
-                         /* Sortie et entrée */ int *takeall,
+                         /* Sortie et entree */ int *takeall,
                          /* Sortie */ int *valid)
 {
   int j, Tta = 0;
   
   for (j=*takenone; j < (*L-*takeall); j++)
 		if (nhnonint[j] > Nh[j]) Tta = Tta + 1;
-    /* Attention, si j'ai des problemes, ça pourrait provenir de cette comparaison entre un int et un double */
+    /* Attention, si j'ai des problemes, ca pourrait provenir de cette comparaison entre un int et un double */
     
   if ((Tta > 0) && (*takeall < *L - 1 - *takenone)){
     *takeall = *takeall + 1; 
@@ -494,11 +494,11 @@ void verif_takeall_C (double *nhnonint, int *Nh, int *L, int *takenone,
   } else {
     *valid = 1; 
   }
-/* J'ai changé la condition nh[B]>=Nh[B] pour nh[B]>Nh[B] car on ne veux pas de dépassement. Si nh[B]=Nh[B]
-   on atteint le CV cible ou le n cible, c'est correct. Ce changement règle certains cas problématiques que j'avais
-   rencontré avec Kozak qui restait pris dans un minimum global à cause d'un ajustement pour strate takeall
-   qui n'avait pas lieu d'être fait (dans premières strates par exemple). Par contre, ça peut créer des résultats
-   surprenant pour lesquels une strate qui paraît recensement est présente en dessous d'une strate échantillonnée. */
+/* J'ai change la condition nh[B]>=Nh[B] pour nh[B]>Nh[B] car on ne veux pas de depassement. Si nh[B]=Nh[B]
+   on atteint le CV cible ou le n cible, c'est correct. Ce changement regle certains cas problematiques que j'avais
+   rencontre avec Kozak qui restait pris dans un minimum global a cause d'un ajustement pour strate takeall
+   qui n'avait pas lieu d'etre fait (dans premieres strates par exemple). Par contre, ca peut creer des resultats
+   surprenant pour lesquels une strate qui parait recensement est presente en dessous d'une strate echantillonnee. */
 }
 
 /* ******************************************************************************************** */
@@ -506,39 +506,39 @@ void verif_takeall_C (double *nhnonint, int *Nh, int *L, int *takenone,
 /* Arrondissement des nhnonint afin d'obtenir les nh
 
 Algorithme :
- Pas d'arrondissement à faire pour les strates takenone et takeall.
+ Pas d'arrondissement a faire pour les strates takenone et takeall.
  Pour un CV cible : les nhnonint des strates takesome sont tous arrondis vers le haut.
  Pour un n cible (Il faut que la somme des nh arrondis = n, mais attention si on a une
- strate certain, le n cible pour l'arrondissement, donc la valeur donnée à l'agument n
- en entrée, doit être le n cible total - Nc, la taille de la strate certain.) :
+ strate certain, le n cible pour l'arrondissement, donc la valeur donnee a l'agument n
+ en entree, doit etre le n cible total - Nc, la taille de la strate certain.) :
  1- Ramener a 1 les nhnonint >0 et <1.
  2- Identifier les nhnonint qui reste a arrondir.
  3- Calculer le nombre de nhnonint a arrondir de chacune des facons possibles
     (nm1 : partie entiere - 1, mp0 : partie entiere, np1 : partie entiere + 1)
-  Un nm1 non nul peut survenir quand des nhnonint entre 0 et 1 sont ramenés à 1.
+  Un nm1 non nul peut survenir quand des nhnonint entre 0 et 1 sont ramenes a 1.
  4- Ordonner les parties decimales de nhnonint qui reste a arrondir en ordre croissant.
  5- Arrondissement : 
     Les nhnonint avec les nm1 plus petites parties decimales seront arrondis par : partie entiere - 1,
     les nhnonint avec les np1 plus grandes parties decimales seront arrondis par : partie entiere + 1,
 	les autres seront arrondis par : partie entiere.
 
-@param ntargetround Utilisé seulement si on a un n cible : il s'agit du n cible pour l'arrondissement.
-                    C'est en fait ntargetnoc, le n cible demandé - le nombre d'observations dans la strate certain,
+@param ntargetround Utilise seulement si on a un n cible : il s'agit du n cible pour l'arrondissement.
+                    C'est en fait ntargetnoc, le n cible demande - le nombre d'observations dans la strate certain,
                     donc un entier.
-voir la description générale au début de ce fichier pour les autres paramètres.
+voir la description generale au debut de ce fichier pour les autres parametres.
 
-Aucune valeur retournée (ou modifiée) n'est unique à cette fonction, 
-voir la description générale des sorties au début de ce fichier.
+Aucune valeur retournee (ou modifiee) n'est unique a cette fonction, 
+voir la description generale des sorties au debut de ce fichier.
 
-Créée le 25 avril 2012, ajustée et vérifiée le 28 septembre 2012
+Creee le 25 avril 2012, ajustee et verifiee le 28 septembre 2012
 */ 
 void get_nh_C(double *nhnonint, int *findn, int *ntargetround, int *Nh, int *TCN, 
                   int *L, int *takenone, int *takeall, 
   		            /* sortie */ double *nh)
 { 
-  /* Note : Logiquement, nh devrait être un entier. Cependant, les entiers ne peuvent pas prendre la
-     valeur nan en C. Alors la programmation est plus simple si je stocke nh en double, em gardant en tête
-     qu'en théorie il s'agit bien d'un entier */
+  /* Note : Logiquement, nh devrait etre un entier. Cependant, les entiers ne peuvent pas prendre la
+     valeur nan en C. Alors la programmation est plus simple si je stocke nh en double, em gardant en tete
+     qu'en theorie il s'agit bien d'un entier */
   
 	int j; /* pour les boucles */
 
@@ -573,14 +573,14 @@ void get_nh_C(double *nhnonint, int *findn, int *ntargetround, int *Nh, int *TCN
 			} 
 		}
     
-    /* Note : on laisse aller les nhnonint nuls ou négatifs. Il vont simplement ête arrondis comme les autres.
-       Ces valeurs ne sont pas valides logiquement, mais elles sont possibles mathématiquement dans les cas suivants :
-       Situation menant à un nhnonint nul : variance nulle dans une strate take-some
-       Situation menant à des nhnonint négatifs : strate take-all plus grande que le n cible */
+    /* Note : on laisse aller les nhnonint nuls ou negatifs. Il vont simplement ete arrondis comme les autres.
+       Ces valeurs ne sont pas valides logiquement, mais elles sont possibles mathematiquement dans les cas suivants :
+       Situation menant a un nhnonint nul : variance nulle dans une strate take-some
+       Situation menant a des nhnonint negatifs : strate take-all plus grande que le n cible */
 		
 		if ( Ltsr > 0 ) { /* Si on a quelque chose a arrondir seulement */
 
-			/* 2- Identifier les nhnonint qui doivent être arrondis */
+			/* 2- Identifier les nhnonint qui doivent etre arrondis */
 			int Id[Ltsr];
 			int i=0; /* Indice pour le vecteur des valeurs a arrondir uniquement */
 			for (j=0; j < Lts; j++) {
@@ -601,11 +601,11 @@ void get_nh_C(double *nhnonint, int *findn, int *ntargetround, int *Nh, int *TCN
 				snht = snht + nht[j];
 				index[j] = j;			
 			}
-			int nhaut; /* nombre de nhnonint à arrondir vers le haut (peut être négatif) */
+			int nhaut; /* nombre de nhnonint a arrondir vers le haut (peut etre negatif) */
 			nhaut = (*ntargetround - (Lts - Ltsr) - snht - *TCN );
    
-			int nm1, np0; /* (nm1 strates : partie entière - 1, mp0 strates : partie entière, 
-							  np1 strates : partie entière + 1 (pas besoin de le calculer)) */
+			int nm1, np0; /* (nm1 strates : partie entiere - 1, mp0 strates : partie entiere, 
+							  np1 strates : partie entiere + 1 (pas besoin de le calculer)) */
 			if ( nhaut < 0) {
 				nm1 = -nhaut;
 				np0 = Ltsr - nm1;
@@ -614,8 +614,8 @@ void get_nh_C(double *nhnonint, int *findn, int *ntargetround, int *Nh, int *TCN
 				np0 = Ltsr - nhaut;
 			}
 			
-			/* 4- Ordonner les parties décimales de nhnonint qui reste à arrondir en ordre croissant. */
-			rsort_with_index(reste,index,Ltsr); /* si égalités, fait comme rank avec ties.method="first" */
+			/* 4- Ordonner les parties decimales de nhnonint qui reste a arrondir en ordre croissant. */
+			rsort_with_index(reste,index,Ltsr); /* si egalites, fait comme rank avec ties.method="first" */
 			
 			/* 5- Arrondissement final */   	
 			for (j=0; j < Ltsr; j++) {
@@ -626,60 +626,60 @@ void get_nh_C(double *nhnonint, int *findn, int *ntargetround, int *Nh, int *TCN
 				} else {
 					nh[Id[index[j]]] = nht[index[j]] + 1;
 				}
-				/* Si un nh est inférieur à 0, je vais le ramener à 0 */
+				/* Si un nh est inferieur a 0, je vais le ramener a 0 */
 				nh[Id[index[j]]] = fmax2(0, nh[Id[index[j]]]);
-        /* Seul cas où c'est possible : nnoc négatif, ce qui est vraiment tiré par les chaveux.
-           il est certain ue les ah sont positifs étant donné que les Nh et les VhY sont toujours des 
-           nombres positifs, et que EYh est élevé au carré dans la formule des gammah. */
+        /* Seul cas ou c'est possible : nnoc negatif, ce qui est vraiment tire par les chaveux.
+           il est certain ue les ah sont positifs etant donne que les Nh et les VhY sont toujours des 
+           nombres positifs, et que EYh est eleve au carre dans la formule des gammah. */
 			}
 		} 
 	}
   
-  /* Si les nhnonint prennaient la valeur nan, les nh caculés par le code ci-dessus ne prendront
-     pas la valeur nan, mais plutot une valeur extrême. Alors je vais faire une petite correction ici */
+  /* Si les nhnonint prennaient la valeur nan, les nh cacules par le code ci-dessus ne prendront
+     pas la valeur nan, mais plutot une valeur extreme. Alors je vais faire une petite correction ici */
   for (j=0; j < Lts; j++) {
     if (!R_FINITE(nhnonint[*takenone + j])) nh[*takenone + j] = R_NaN;
   }
   /* Valeurs manquantes en C, source = Wrinting R extensions, sections 5.10.3 et 6.4 */
   
   
-/* J'ai étudié les valeurs possibles de nhaut.
-   *ntargetround est le ncible. Il est en fait égal à  :
+/* J'ai etudie les valeurs possibles de nhaut.
+   *ntargetround est le ncible. Il est en fait egal a  :
   0 [strates takenone] + sum(nhnonint) [strates takesome] + TCN [strates takeall].
 	On peut briser sum(nhnonint) en deux parties : une pour les nhnonint entre 0 et 1, 
 	et une autre partie pour les autres nhnonint.
-	On soustrait à ça 
+	On soustrait a ca 
 	0 [strates takenone] + ((Lts - Ltsr)*1 + snht) [strates takesome] + snhta [strates takeall].
 	On voit que les termes pour les strates takenone et takeall s'annulent.
-	écrivons le résultat de la soustraction comme la somme des deux termes suivants :
+	ecrivons le resultat de la soustraction comme la somme des deux termes suivants :
 	t1 = sum(nhnonint) [strates takesome avec nhnonint entre 0 et 1] - (Lts - Ltsr)
 	t2 = sum(nhnonint) [strates takesome avec nhnonint pas entre 0 et 1] - snht
-	où, rappelons-le, snht est la somme des parties entères des nhnonint pas entre 0 et 1
+	ou, rappelons-le, snht est la somme des parties enteres des nhnonint pas entre 0 et 1
 	pour une strate takesome.
 	Les valeurs max et min de ces deux termes sont :
 	min(t1) tend vers - (Lts - Ltsr), max(t1) tend vers 0;
 	min(t2) tend vers 0, max(t2) tend vers Ltsr.
 	Ainsi, min(nhaut) = min(t1) + min(t2) : tend vers - (Lts - Ltsr)
 		   max(nhaut) = max(t1) + max(t2) : tend vers Ltsr.
-	C'est donc dire qu'il est impossible d'avoir à arrondir vers le haut plus de nombres
+	C'est donc dire qu'il est impossible d'avoir a arrondir vers le haut plus de nombres
 	qu'on en a, ce qui est une excellente chose.
 	Cependant, on pourrait avoir des cas limite comme
 	nhnonhint = 0.3333 , 0.3333, 0.3333 : serait arrondi par 1, 1, 1, mais ici ncible = 1.
 	Donc les nh fournis par notre algorithme ne somment pas au ncible.
-	Je pense qu'on n'a pas ici à essayer de modifier l'algo d'arrondissement. 
-	C'est simplement un signe que le ncible demandé n'est pas réaliste. */
+	Je pense qu'on n'a pas ici a essayer de modifier l'algo d'arrondissement. 
+	C'est simplement un signe que le ncible demande n'est pas realiste. */
 }			
 
 /* ******************************************************************************************** */
 
 /* Calcul du RRMSE
 
-Aucun paramètre n'est unique à cette fonction, 
-voir la description générale des paramètres au début de ce fichier.
+Aucun parametre n'est unique a cette fonction, 
+voir la description generale des parametres au debut de ce fichier.
 
-@return RRMSE Le Relative Root Mean Squared Error pour le plan donné en entrée. 
+@return RRMSE Le Relative Root Mean Squared Error pour le plan donne en entree. 
 
-Créée le 27 avril 2012, ajustée et vérifiée le 28 septembre 2012
+Creee le 27 avril 2012, ajustee et verifiee le 28 septembre 2012
 */
 void get_RRMSE_C (double *biaspenalty, double *TY, double *TAY, int *Nh, double *VYh, double *nhcalcul, 
                   double *rhL, int *L,int *takenone,
@@ -694,15 +694,15 @@ void get_RRMSE_C (double *biaspenalty, double *TY, double *TAY, int *Nh, double 
 		  *RRMSE = NA_REAL;	
 	}
 	if (!ISNA(*RRMSE)) { 
-		double sum = 0; /* Somme à calculer sur les strates takesome et takeall */
+		double sum = 0; /* Somme a calculer sur les strates takesome et takeall */
 		for (j=*takenone; j < *L; j++) {
       if (Nh[j] != 0 && VYh[j] != 0) sum = sum + R_pow(Nh[j],2) * VYh[j] * (R_pow(nhcalcul[j]*rhL[j],-1) - R_pow(Nh[j], -1));     
-      /* Ici, on utilise R_pow(Nh[j], -1) plutôt que 1/Nh[j] parce qu'avec le symbole /, étant
-         donné que Nh[j] et 1 sont des entiers, le résultat est aussi stocké comme un entier. Ainsi la
-         fraction Nh[j] est arrondie à 1 (si Nh[j]=1) ou 0 (sinon). Alors que R_pow transforme Nh[j] en 
-         double avant de faire le calcul (déf. de R_pow : double R_pow (double x, double y)).      
-         R_pow(nhcalcul[j]*rhL[j],-1) pourrait, pour sa part, être remplacé par (1/(nhcalcul[j]*rhL[j]))
-         parce que nhcalcul et rhL sont déjà des double. */
+      /* Ici, on utilise R_pow(Nh[j], -1) plutot que 1/Nh[j] parce qu'avec le symbole /, etant
+         donne que Nh[j] et 1 sont des entiers, le resultat est aussi stocke comme un entier. Ainsi la
+         fraction Nh[j] est arrondie a 1 (si Nh[j]=1) ou 0 (sinon). Alors que R_pow transforme Nh[j] en 
+         double avant de faire le calcul (def. de R_pow : double R_pow (double x, double y)).      
+         R_pow(nhcalcul[j]*rhL[j],-1) pourrait, pour sa part, etre remplace par (1/(nhcalcul[j]*rhL[j]))
+         parce que nhcalcul et rhL sont deja des double. */
 		}
 		*RRMSE = R_pow(fmax2(0, R_pow(*biaspenalty * *TAY, 2) + sum), 0.5) / *TY;
 	} 
@@ -711,21 +711,21 @@ void get_RRMSE_C (double *biaspenalty, double *TY, double *TAY, int *Nh, double 
 
 /* ******************************************************************************************** */
 
-/* Calcul de n, la taille d'échantillon totale, incluant la strate certain
-   (il s'agit du critère à optimiser dans le cas d'un CV cible)
+/* Calcul de n, la taille d'echantillon totale, incluant la strate certain
+   (il s'agit du critere a optimiser dans le cas d'un CV cible)
 
-Aucun paramètre n'est unique à cette fonction, 
-voir la description générale des paramètres au début de ce fichier.
+Aucun parametre n'est unique a cette fonction, 
+voir la description generale des parametres au debut de ce fichier.
 
-@return n la somme des éléments de nhcalcul + Nc
+@return n la somme des elements de nhcalcul + Nc
 
-Créée et vérifiée le 28 septembre 2012.
+Creee et verifiee le 28 septembre 2012.
 */
 void get_n_C (double *nhcalcul, int *L, int *Nc,
                 /* sortie */ double *n)
 {
   int j;
-  *n = *Nc; /* Il faut compter les unités de la strates certain dans cette somme */
+  *n = *Nc; /* Il faut compter les unites de la strates certain dans cette somme */
   for (j=0; j < *L; j++) *n = *n + nhcalcul[j];
 }
 
@@ -736,12 +736,12 @@ void get_n_C (double *nhcalcul, int *L, int *Nc,
 Conditions : Nh >= minNh pour toutes les Ls strates take-some et take-all,
              Nh >= 0 pour les strate take-none
 
-Aucun paramètre n'est unique à cette fonction, 
-voir la description générale des paramètres au début de ce fichier.
+Aucun parametre n'est unique a cette fonction, 
+voir la description generale des parametres au debut de ce fichier.
 
-@return NhOK 1 si les conditions sur les Nh sont respectées pour toutes les strates, 0 sinon
+@return NhOK 1 si les conditions sur les Nh sont respectees pour toutes les strates, 0 sinon
 
-Créée et vérifiée le 12 octobre 2012.
+Creee et verifiee le 12 octobre 2012.
 */
 void test_Nh_C (int *Nh, int *L, int *takenone, int *minNh,
                   /* sortie */ int *NhOK)
@@ -749,8 +749,8 @@ void test_Nh_C (int *Nh, int *L, int *takenone, int *minNh,
   int j, cond = 0;
 	for (j=0; j<*takenone; j++)    if( Nh[j] >= 0 )      cond = cond + 1; 
 	for (j=*takenone; j < *L; j++) if( Nh[j] >= *minNh ) cond = cond + 1;
-  if ( cond == *L) *NhOK = 1; /* 1 = les conditions sont respectées pour toutes les strates*/
-  else *NhOK = 0;             /* 0 = les conditions ne sont pas respectée */
+  if ( cond == *L) *NhOK = 1; /* 1 = les conditions sont respectees pour toutes les strates*/
+  else *NhOK = 0;             /* 0 = les conditions ne sont pas respectee */
 }
 
 
@@ -759,58 +759,58 @@ void test_Nh_C (int *Nh, int *L, int *takenone, int *minNh,
 /* Teste les conditions sur les nh 
 
 Conditions : nh > 0 pour toutes les Ls strates take-some et take-all
-             (ce test sur les nh entiers revient à nh !=0 car on a ramené à 0 tous les nhnonint négatifs, 
-              ce qui devrait survenir très rarement, uniquement dans des cas limite),
-             rien à tester sur les strates take-none car dans ce cas par définition nhnonint = nh = 0.
+             (ce test sur les nh entiers revient a nh !=0 car on a ramene a 0 tous les nhnonint negatifs, 
+              ce qui devrait survenir tres rarement, uniquement dans des cas limite),
+             rien a tester sur les strates take-none car dans ce cas par definition nhnonint = nh = 0.
 
-Aucun paramètre n'est unique à cette fonction, 
-voir la description générale des paramètres au début de ce fichier.
+Aucun parametre n'est unique a cette fonction, 
+voir la description generale des parametres au debut de ce fichier.
 
-@return nhOK 1 si les conditions sur les nh sont respectées pour toutes les strates, 0 sinon
+@return nhOK 1 si les conditions sur les nh sont respectees pour toutes les strates, 0 sinon
 
-Créée et vérifiée le 12 octobre 2012.
+Creee et verifiee le 12 octobre 2012.
 */
 void test_nh_C (double *nh, int *L, int *takenone,
                   /* sortie */ int *nhOK)
 {
   int j, cond = 0;
 	for (j=*takenone; j < *L; j++) if( nh[j] > 0 ) cond = cond + 1;
-  if ( cond == *L - *takenone) *nhOK = 1; /* 1 = les conditions sont respectées pour toutes les strates*/
-  else *nhOK = 0;                         /* 0 = les conditions ne sont pas respectée */
+  if ( cond == *L - *takenone) *nhOK = 1; /* 1 = les conditions sont respectees pour toutes les strates*/
+  else *nhOK = 0;                         /* 0 = les conditions ne sont pas respectee */
 }
 
 
 /* ******************************************************************************************** */
 
-/* Fonction qui fait tous les calculs nécessaires à l'algorithme de Kozak lorsqu'il "essaie une borne"
+/* Fonction qui fait tous les calculs necessaires a l'algorithme de Kozak lorsqu'il "essaie une borne"
 
-Cette fonction fournit les détails d'un plan d'échantillonnage stratifié, pour des bornes données.
+Cette fonction fournit les details d'un plan d'echantillonnage stratifie, pour des bornes donnees.
 Elle travaille sur le vecteur des observations excluant la strate certain.
 
 @param dotests indicatrice : 1 si on doit faire les tests des conditions sur les Nh et les nh 
-                             (c'est le cas pour l'algo de Kozak, incluant l'énumération complète),
+                             (c'est le cas pour l'algo de Kozak, incluant l'enumeration complete),
                              0 si on n'a pas besoin de faire ces tests (strata.bh, .geo et .cumrootf)
-@param takealladjust indicatrice : 1 si on demande à faire un ajustement automatique pour les strates recensement, 
+@param takealladjust indicatrice : 1 si on demande a faire un ajustement automatique pour les strates recensement, 
                                    0 sinon
-voir la description générale au début de ce fichier pour les autres paramètres.
+voir la description generale au debut de ce fichier pour les autres parametres.
 
-@result takeallout un entier : valeur de takeall à la fin des calculs.
-@result optinhnonint le critère à optimiser (n si CV cible, RRMSE si n cible) calculé à partir
-                     des tailles d'échantillon non entières nhnonint
-@result optinh le critère à optimiser (n si CV cible, RRMSE si n cible) calculé à partir
-               des tailles d'échantillon entières nh
-voir la description générale au début de ce fichier pour les autres sorties.
+@result takeallout un entier : valeur de takeall a la fin des calculs.
+@result optinhnonint le critere a optimiser (n si CV cible, RRMSE si n cible) calcule a partir
+                     des tailles d'echantillon non entieres nhnonint
+@result optinh le critere a optimiser (n si CV cible, RRMSE si n cible) calcule a partir
+               des tailles d'echantillon entieres nh
+voir la description generale au debut de ce fichier pour les autres sorties.
 
-Créée et vérifiée le 28 septembre 2012
+Creee et verifiee le 28 septembre 2012
 voir fonction R strata.bh.internal qui appelle cette fonction
 */
 void strata_bh_opti_C(double *xnoc, int *Nnoc, double *bhfull, int *L, int *takenone, int *takeall,
             int *Nc, double *EYc, double *q1, double *q2, double *q3,
             int *nmodel, double *beta, double *sig2, double *ph, double *gamma, double *epsilon, double *EX, double *EX2,
             int *findn, int *n, double *CV, double *rhL, double *biaspenalty, int *takealladjust, int *dotests, int *minNh,
-            /* Sortie */ int *NhOK, int *nhOK, /* uniquement utile à l'algo de Kozak*/ 
+            /* Sortie */ int *NhOK, int *nhOK, /* uniquement utile a l'algo de Kozak*/ 
                          double *phih, double *psih, double *gammah, double *ah, double *U2, double *U, double *V, 
-                         /* uniquement utile à l'algo de Sethi*/
+                         /* uniquement utile a l'algo de Sethi*/
                          int *stratumIDnoc, int *Nh, double *EYh, double *VYh, double *TY, double *TAY,  
                          double *nhnonint, int *takeallout, double *nh, double *optinhnonint, double *optinh)
 {
@@ -818,7 +818,7 @@ void strata_bh_opti_C(double *xnoc, int *Nnoc, double *bhfull, int *L, int *take
   double ntargetnoc;
   *takeallout = *takeall;
   
-  /* Délimitation des strates */
+  /* Delimitation des strates */
   get_stratumIDnoc_C(xnoc, Nnoc, bhfull, L, stratumIDnoc);
   
   /* Calcul des tailles de population dans les strates*/
@@ -829,7 +829,7 @@ void strata_bh_opti_C(double *xnoc, int *Nnoc, double *bhfull, int *L, int *take
   /* Si besoin, test sur les Nh ici */
   if (*dotests == 1) {
     test_Nh_C(Nh, L, takenone, minNh, NhOK);
-    if (*NhOK == 0) arret1 = 1; else arret1 = 0; /* On arrête l'exécution de la fonction si NhOK=0 */
+    if (*NhOK == 0) arret1 = 1; else arret1 = 0; /* On arrete l'execution de la fonction si NhOK=0 */
   } else {
     arret1 = 0;
   }
@@ -837,30 +837,30 @@ void strata_bh_opti_C(double *xnoc, int *Nnoc, double *bhfull, int *L, int *take
 /*Rprintf("arret1 : %d  ",arret1);  Rprintf("\n");*/
  
   if (arret1 == 0) {
-    /* Tout le reste de la fonction est dans ce if car si on a testé les Nh et qu'ils ne respectaient pas les
-       conditions, il est inutile de faire les calculs subséquents (donc on sauve du temps en ne les faisant pas,
-       mais attention, les valeurs en sortie autres que NhOK ne seront pas bonnes, il ne faut pas les considérer) */
+    /* Tout le reste de la fonction est dans ce if car si on a teste les Nh et qu'ils ne respectaient pas les
+       conditions, il est inutile de faire les calculs subsequents (donc on sauve du temps en ne les faisant pas,
+       mais attention, les valeurs en sortie autres que NhOK ne seront pas bonnes, il ne faut pas les considerer) */
     
-    /* Calcul des moments anticipées (EYh et VYh) et de sommes dont on a besoin dans les calculs subséquents (TY et TAY)*/
+    /* Calcul des moments anticipees (EYh et VYh) et de sommes dont on a besoin dans les calculs subsequents (TY et TAY)*/
     get_momentY_C(xnoc, stratumIDnoc, Nnoc, Nh, L, Nc, EYc, takenone, nmodel, beta, sig2, ph, gamma, epsilon, 
                       EX, EX2, EYh, VYh, phih, psih, TY, TAY);
 
 /*Rprintf("EYh : "); for (j=0; j < *L; j++) Rprintf("%f  ",EYh[j]);  Rprintf("\n");
 Rprintf("VYh : "); for (j=0; j < *L; j++) Rprintf("%f  ",VYh[j]);  Rprintf("\n");*/
 
-    /* Allocation : répartition de n parmi les L strates. */
-    /* Étape 1 alloc : calcul des gammah */
+    /* Allocation : repartition de n parmi les L strates. */
+    /* Etape 1 alloc : calcul des gammah */
     get_gammah_C(Nh, EYh, VYh, L, q1, q2, q3, gammah);
     
 /*Rprintf("gammah : "); for (j=0; j < *L; j++) Rprintf("%f  ",gammah[j]);  Rprintf("\n");*/
 
     while (valid == 0) {
-      /* Étape 2 alloc : calcul des ah et de TCN*/
+      /* Etape 2 alloc : calcul des ah et de TCN*/
       get_ah_C(gammah, Nh, L, takenone, takeallout, ah, &TCN, U2);
       
 /*Rprintf("ah : "); for (j=0; j < *L; j++) Rprintf("%f  ",ah[j]);  Rprintf("\n");*/
 
-      /* Étape 3 alloc : calcul du ntargetnoc*/
+      /* Etape 3 alloc : calcul du ntargetnoc*/
       if (*findn == 1){
         /* Dans le cas d'un CV cible, on doit appliquer une formule */
         get_nnoc_C(CV, Nh, ah, VYh, rhL, L, takenone, takeallout, biaspenalty, TAY, TY, &TCN, &ntargetnoc, U, V);
@@ -870,13 +870,13 @@ Rprintf("VYh : "); for (j=0; j < *L; j++) Rprintf("%f  ",VYh[j]);  Rprintf("\n")
       
 /*Rprintf("ntargetnoc : %f  ",ntargetnoc);  Rprintf("\n");*/
 
-      /* Étape 4 alloc : application de la règle d'allocation 
-                         (qui donnera en résultat les tailles d'échantillon non entières nhnonint) */
+      /* Etape 4 alloc : application de la regle d'allocation 
+                         (qui donnera en resultat les tailles d'echantillon non entieres nhnonint) */
       get_nhnonint_C(&ntargetnoc, &TCN, Nh, ah, L, takenone, takeallout, nhnonint);
 
 /*Rprintf("nhnonint : "); for (j=0; j < *L; j++) Rprintf("%f  ",nhnonint[j]);  Rprintf("\n");*/
 
-      /* Étape 5 alloc : vérification strates recensement, si besoin */
+      /* Etape 5 alloc : verification strates recensement, si besoin */
       if (*takealladjust == 1){
         verif_takeall_C(nhnonint, Nh, L, takenone, takeallout, &valid);
       } else {
@@ -887,34 +887,34 @@ Rprintf("VYh : "); for (j=0; j < *L; j++) Rprintf("%f  ",VYh[j]);  Rprintf("\n")
 
 
     }
-    /* Étape 6 alloc : Arrondissement des nhnonint pour obtenir les nh entiers */
+    /* Etape 6 alloc : Arrondissement des nhnonint pour obtenir les nh entiers */
     int ntargetround = ntargetnoc;
     get_nh_C(nhnonint, findn, &ntargetround, Nh, &TCN, L, takenone, takeallout, nh);
 
 /*Rprintf("nh : "); for (j=0; j < *L; j++) Rprintf("%d  ",nh[j]);  Rprintf("\n");*/
 
-       /* Ici, si on fait un ajustement automatique pour strates recensement, on ne ramène pas à Nh les nh > Nh
-       (nh entiers ou réels), car le but de cette fonction est de calculer les critères pour 
-       l'optimisation. La fonction sera utilisée par l'algorithme de Kozak. 
-       Si on rameneait à Nh les nh > Nh dans l'optimisation, on aurait le problème suivant.
-       Dans le cas d'un CV cible, le critère à minimiser et n. Si on tronque à Nh les valeurs de nh, l'apparition
-       d'une strate recensement causerait une diminution du critère n, qu'on cherche justement à minimiser. Alors
-       les plans faisant apparaître une strate recensement seraient favorisés. L'optimisation prendrait alors une 
-       mauvaise direction. De toute façon, l'ajustement automatique pour strate recensement est obligatoire à 
-       toutes les fonctions qui calculent des bornes. Cet ajustement nous assure que tous les nh (entiers ou réels)
+       /* Ici, si on fait un ajustement automatique pour strates recensement, on ne ramene pas a Nh les nh > Nh
+       (nh entiers ou reels), car le but de cette fonction est de calculer les criteres pour 
+       l'optimisation. La fonction sera utilisee par l'algorithme de Kozak. 
+       Si on rameneait a Nh les nh > Nh dans l'optimisation, on aurait le probleme suivant.
+       Dans le cas d'un CV cible, le critere a minimiser et n. Si on tronque a Nh les valeurs de nh, l'apparition
+       d'une strate recensement causerait une diminution du critere n, qu'on cherche justement a minimiser. Alors
+       les plans faisant apparaitre une strate recensement seraient favorises. L'optimisation prendrait alors une 
+       mauvaise direction. De toute facon, l'ajustement automatique pour strate recensement est obligatoire a 
+       toutes les fonctions qui calculent des bornes. Cet ajustement nous assure que tous les nh (entiers ou reels)
        seront <= Nh au terme des calculs. */     
     if (*takealladjust == 0 || *takeallout == *L - 1 - *takenone)
       for (j=*takenone; j < (*L-*takeall); j++)
         if (nh[j] > Nh[j]) nh[j] = Nh[j];
     /* Si l'ajustement automatique n'est pas fait ou s'il y a une seule strate take-some, il se pourrait qu'un 
-       nh soit > Nh à la sortie de la présente fonction. Dans ce cas, on va ramener à Nh les nh entiers > Nh, 
-       mais pas les nh réels pour que l'utilisateur puisse comprendre à partir de la sortie pourquoi le CV cible 
-       n'est pas nécessairement atteint sans correction pour strate recensement. */
+       nh soit > Nh a la sortie de la presente fonction. Dans ce cas, on va ramener a Nh les nh entiers > Nh, 
+       mais pas les nh reels pour que l'utilisateur puisse comprendre a partir de la sortie pourquoi le CV cible 
+       n'est pas necessairement atteint sans correction pour strate recensement. */
         
     /* Si besoin, test sur les nh ici */
     if (*dotests == 1) {
       test_nh_C(nh, L, takenone, nhOK);
-      if (*nhOK == 0) arret2 = 1; else arret2 = 0; /* On arrête l'exécution de la fonction si nhOK=0 */
+      if (*nhOK == 0) arret2 = 1; else arret2 = 0; /* On arrete l'execution de la fonction si nhOK=0 */
     } else {
       arret2 = 0;
     }
@@ -922,15 +922,15 @@ Rprintf("VYh : "); for (j=0; j < *L; j++) Rprintf("%f  ",VYh[j]);  Rprintf("\n")
 /*Rprintf("arret2 : %d  ",arret2);  Rprintf("\n");*/
   
     if (arret2 == 0) {
-      /* Tout le reste de la fonction est dans ce if car si on a testé les nh et qu'ils ne respectaient pas les
-         conditions, il est inutile de faire les calculs subséquents (donc on sauve du temps en ne les faisant pas, mais
-         attention, les valeurs en sortie optinhnonint et optinh ne seront pas bonnes, il ne faut pas les considérer) */
+      /* Tout le reste de la fonction est dans ce if car si on a teste les nh et qu'ils ne respectaient pas les
+         conditions, il est inutile de faire les calculs subsequents (donc on sauve du temps en ne les faisant pas, mais
+         attention, les valeurs en sortie optinhnonint et optinh ne seront pas bonnes, il ne faut pas les considerer) */
       
-      /* Calcul du critère à optimiser, sur les nh et sur les nhnonint */
-      if (*findn == 1) { /* Pour un CV cible, le critère à optimiser est n, la taille d'échantillon totale */
+      /* Calcul du critere a optimiser, sur les nh et sur les nhnonint */
+      if (*findn == 1) { /* Pour un CV cible, le critere a optimiser est n, la taille d'echantillon totale */
         get_n_C(nhnonint, L, Nc, optinhnonint);
         get_n_C(nh, L, Nc, optinh);
-      } else { /* Pour un n cible, le critère à optimiser est le RRMSE */
+      } else { /* Pour un n cible, le critere a optimiser est le RRMSE */
         get_RRMSE_C(biaspenalty, TY, TAY, Nh, VYh, nhnonint, rhL, L, takenone, optinhnonint);
         get_RRMSE_C(biaspenalty, TY, TAY, Nh, VYh, nh, rhL, L, takenone, optinh);
       }
@@ -946,13 +946,13 @@ Rprintf("VYh : "); for (j=0; j < *L; j++) Rprintf("%f  ",VYh[j]);  Rprintf("\n")
 /* Makes the conversion from stratum boundaries expressed in terms of data rank (pbh), 
    to stratum boundaries expressed on the scale of the data (bhfull)
 
-@param pbh vecteur de longueur L-1 représentant des bornes de strates, mais sur l'échelle des rangs des données :
-           chaque élément de pbh est un entier représentant la position dans le vecteur x1noc d'une borne.
-voir la description générale au début de ce fichier pour les autres paramètres.
+@param pbh vecteur de longueur L-1 representant des bornes de strates, mais sur l'echelle des rangs des donnees :
+           chaque element de pbh est un entier representant la position dans le vecteur x1noc d'une borne.
+voir la description generale au debut de ce fichier pour les autres parametres.
 
-@return bhfull le vecteur L+1 des bornes pleines, sur l'échelle des données, équivalentes aux pbh
+@return bhfull le vecteur L+1 des bornes pleines, sur l'echelle des donnees, equivalentes aux pbh
 
-Créée le 12 octobre 2012
+Creee le 12 octobre 2012
 */
 void pbh2bhfull_C(int *pbh, int *L, double *x1noc, int *N1noc, double *bhfull)
 { 
@@ -972,23 +972,23 @@ void pbh2bhfull_C(int *pbh, int *L, double *x1noc, int *N1noc, double *bhfull)
 
 /* ******************************************************************************************** */
 
-/* Énumération complète des ensembles de bornes possibles pour touver le meilleur 
+/* Enumeration complete des ensembles de bornes possibles pour touver le meilleur 
 
-On essaie tous les ensembles de bornes possibles et on recherche la meilleure, celle qui minimise le critère (RRMSE si n cible, n si CV cible).
+On essaie tous les ensembles de bornes possibles et on recherche la meilleure, celle qui minimise le critere (RRMSE si n cible, n si CV cible).
 
-@param pbhsol vecteur de longueur (L-1)*nsol qui contient tous les ensembles de bornes à essayer, 
-              représentées sur l'échelle des rangs : les L-1 premiers éléments forment le premier ensemble de bornes,
-              les L-1 éléments suivants le deuxième ensemble, etc.
-@param nsol le nombre d'ensemble de bornes à essayer
-voir la description générale au début de ce fichier pour les autres paramètres.
+@param pbhsol vecteur de longueur (L-1)*nsol qui contient tous les ensembles de bornes a essayer, 
+              representees sur l'echelle des rangs : les L-1 premiers elements forment le premier ensemble de bornes,
+              les L-1 elements suivants le deuxieme ensemble, etc.
+@param nsol le nombre d'ensemble de bornes a essayer
+voir la description generale au debut de ce fichier pour les autres parametres.
 
-@return soldetail un énorme vecteur de longueur ((L-1)+2*L+5)*nsol, qui devriendra une matrice en R,
-                  comprennant les éléments dont on veut garder la trace (bh, Nh, nh, takeall, Nhok, nhok, 
-                  optinh, optinhnonint) pour chaque ensemble de bornes à essayer. Ordre dans le vecteur :
-                  tous les éléments pour le premier ensemble de bornes, suivi de tous les éléments pour le 
-                  deuxième, etc.
+@return soldetail un enorme vecteur de longueur ((L-1)+2*L+5)*nsol, qui devriendra une matrice en R,
+                  comprennant les elements dont on veut garder la trace (bh, Nh, nh, takeall, Nhok, nhok, 
+                  optinh, optinhnonint) pour chaque ensemble de bornes a essayer. Ordre dans le vecteur :
+                  tous les elements pour le premier ensemble de bornes, suivi de tous les elements pour le 
+                  deuxieme, etc.
 
-Créée le 12 octobre 2012
+Creee le 12 octobre 2012
 */
 void complete_enum_C(int *pbhsol, int *nsol, int *L, double *x1noc, int *N1noc, double *xnoc, int *Nnoc, 
                          int *takenone, int *takeall, int *Nc, double *EYc, double *q1, double *q2, double *q3,
@@ -1004,7 +1004,7 @@ void complete_enum_C(int *pbhsol, int *nsol, int *L, double *x1noc, int *N1noc, 
   int dotests = 1;       /* ainsi que les tests sur Nh et nh. */
 
   for (i=0; i < *nsol; i++){
-    /* Déterminer les bornes pleines sur l'échelle des données à partir des combinaisons fournies en entrée */
+    /* Determiner les bornes pleines sur l'echelle des donnees a partir des combinaisons fournies en entree */
     for (j=0; j < *L - 1; j++) pbh[j] = pbhsol[j + i * (*L - 1)];
     pbh2bhfull_C(pbh, L, x1noc, N1noc, bhfull);
 
@@ -1014,7 +1014,7 @@ void complete_enum_C(int *pbhsol, int *nsol, int *L, double *x1noc, int *N1noc, 
            &NhOK, &nhOK, phih, psih, gammah, ah, &U2, &U, &V, stratumIDnoc, Nh, EYh, VYh, &TY, &TAY, 
            nhnonint, &takeallout, nh, &optinhnonint, &optinh);
            
-    /* Enregistrement des résultats (bh, Nh, nh, takeall, Nhok, nhok, optinh, optinhnonint)*/
+    /* Enregistrement des resultats (bh, Nh, nh, takeall, Nhok, nhok, optinh, optinhnonint)*/
     for (j=0; j < *L - 1; j++) soldetail[j + i * (3 * *L + 4)] = bhfull[j + 1];
     for (j=0; j < *L; j++) soldetail[*L - 1 + j + i * (3 * *L + 4)] = Nh[j];
     for (j=0; j < *L; j++) soldetail[2 * *L - 1 + j + i * (3 * *L + 4)] = nh[j];
@@ -1032,29 +1032,29 @@ void complete_enum_C(int *pbhsol, int *nsol, int *L, double *x1noc, int *N1noc, 
 
 /* Algorithme de Kozak (original) 
 
-@param combin2try vecteur de longueur (2*(L-1)+6)*ncombin qui contient toutes les combinaisons à essayer.
+@param combin2try vecteur de longueur (2*(L-1)+6)*ncombin qui contient toutes les combinaisons a essayer.
                   Le vecteur contient dans l'ordre
-                  éléments : (ibhtype,    ibh,    ipbh, optinh, optinhnonint, takeall, maxstep, maxstill)
+                  elements : (ibhtype,    ibh,    ipbh, optinh, optinhnonint, takeall, maxstep, maxstill)
                   positions: (      0, 1->L-1, L->2L-2,   2L-1,           2L,    2L+1,    2L+2,     2L+3)
-                  définissant la première combinaison, tous les mêmes éléments pour la deuxième combinaison, etc.
-@param ncombin le nombre de combinaisons à essayer (le nombre de lignes dans la version matrice de combin2try)
-voir la description générale au début de ce fichier pour les autres paramètres.
+                  definissant la premiere combinaison, tous les memes elements pour la deuxieme combinaison, etc.
+@param ncombin le nombre de combinaisons a essayer (le nombre de lignes dans la version matrice de combin2try)
+voir la description generale au debut de ce fichier pour les autres parametres.
 
-@return rundetail  un énorme vecteur de longueur (2*(L-1)+8)*(ncombin*rep), qui devriendra une matrice en R,
-                   comprennant les éléments dont on veut garder la trace pour chaque combinaison à essayer :
-                   éléments : (    bh, optinh, optinhnonint, takeall, niter, ibhtype,       ibh,  rep)
+@return rundetail  un enorme vecteur de longueur (2*(L-1)+8)*(ncombin*rep), qui devriendra une matrice en R,
+                   comprennant les elements dont on veut garder la trace pour chaque combinaison a essayer :
+                   elements : (    bh, optinh, optinhnonint, takeall, niter, ibhtype,       ibh,  rep)
                    positions: (0->L-2,    L-1,            L,     L+1,   L+2,     L+3, L+4->2L+2, 2L+3)
-                   Ordre dans le vecteur : tous les éléments pour la première combinaison, 
-                   suivi de tous les éléments pour la deuxième, etc.
-@return iterdetail un énorme vecteur de longueur ((L-1)+6)*nrowiterdetail, qui devriendra une matrice en R,
-                   comprennant les éléments dont on veut garder la trace pour chaque itération de l'algo :
-                   éléments : (    bh, optinh, optinhnonint, takeall, step, iter, run)
+                   Ordre dans le vecteur : tous les elements pour la premiere combinaison, 
+                   suivi de tous les elements pour la deuxieme, etc.
+@return iterdetail un enorme vecteur de longueur ((L-1)+6)*nrowiterdetail, qui devriendra une matrice en R,
+                   comprennant les elements dont on veut garder la trace pour chaque iteration de l'algo :
+                   elements : (    bh, optinh, optinhnonint, takeall, step, iter, run)
                    positions: (0->L-2,    L-1,            L,     L+1,  L+2,  L+3, L+4)
-                   Ordre dans le vecteur : tous les éléments pour la première itération, 
-                   suivi de tous les éléments pour la deuxième, etc.
+                   Ordre dans le vecteur : tous les elements pour la premiere iteration, 
+                   suivi de tous les elements pour la deuxieme, etc.
 @return nrowiterdetail le nombre de lignes dans la version matrice du vecteur iterdetail
 
-Créée le 17 et 18 octobre 2012
+Creee le 17 et 18 octobre 2012
 */
 void algo_Kozak_C(double *combin2try, int *ncombin, int *L, double *x1noc, int *N1noc, double *xnoc, int *Nnoc, 
                       int *takenone, int *takeall, int *Nc, double *EYc, double *q1, double *q2, double *q3,
@@ -1069,23 +1069,23 @@ void algo_Kozak_C(double *combin2try, int *ncombin, int *L, double *x1noc, int *
   double nh[*L], nhnonint[*L], optinhnonint, optinh, noptinhnonint, noptinh, diffrelopti;
   int takealladjust = 1; /* Ici on fait l'ajustement pour strates takeall, */
   int dotests = 1;       /* ainsi que les tests sur Nh et nh. */
-  int irow = 0;  /* Le compteur du nombre de lignes dans iterdetail est initialisé à zéro. */
-  int rrow = 0;  /* Le compteur du nombre de lignes dans rundetail est initialisé à zéro. */
+  int irow = 0;  /* Le compteur du nombre de lignes dans iterdetail est initialise a zero. */
+  int rrow = 0;  /* Le compteur du nombre de lignes dans rundetail est initialise a zero. */
   int ncol_combin = 2 * *L + 4; /* Le nombre de colonnes dans la version matrice du vecteur combin2try */
   int ncol_run = 2 * *L + 4;    /* Le nombre de colonnes dans la version matrice du vecteur rundetail */
   int ncol_iter = *L + 5;       /* Le nombre de colonnes dans la version matrice du vecteur iterdetail */
   
-  for (i=0; i < *ncombin; i++){  /* boucle sur les combinaisons à essayer */
+  for (i=0; i < *ncombin; i++){  /* boucle sur les combinaisons a essayer */
   
-    for (r=0; r < *rep; r++){  /* boucle sur les répétitions de l'algorithme */   
+    for (r=0; r < *rep; r++){  /* boucle sur les repetitions de l'algorithme */   
       
-      /* Variables à initialiser pour l'algorithme */
-      /* Rappel utile à la programmation ici -> combin2try : éléments et leur positions
+      /* Variables a initialiser pour l'algorithme */
+      /* Rappel utile a la programmation ici -> combin2try : elements et leur positions
          (ibhtype,    ibh,    ipbh, optinh, optinhnonint, takeall, maxstep, maxstill)
          (      0, 1->L-1, L->2L-2,   2L-1,           2L,    2L+1,    2L+2,     2L+3) */
-      iter = 0;   /* Le compteur d'itérations par répétitions est initialisé à zéro. */
-      istill = 0; /* Le compteur d'itérations sans acceptation de nouvelles bornes est initialisé à zéro. */
-      for (j=0; j < *L - 1; j++)  /* bornes initiales sur l'échelle des rangs */
+      iter = 0;   /* Le compteur d'iterations par repetitions est initialise a zero. */
+      istill = 0; /* Le compteur d'iterations sans acceptation de nouvelles bornes est initialise a zero. */
+      for (j=0; j < *L - 1; j++)  /* bornes initiales sur l'echelle des rangs */
         pbh[j] = combin2try[(j + *L) + i * ncol_combin];
       optinh       = combin2try[(2 * *L - 1) + i * ncol_combin];
       optinhnonint = combin2try[(2 * *L + 0) + i * ncol_combin];
@@ -1093,39 +1093,39 @@ void algo_Kozak_C(double *combin2try, int *ncombin, int *L, double *x1noc, int *
       maxstill     = combin2try[(2 * *L + 3) + i * ncol_combin];
       
 
-      /* Info à mettre dans iterdetail pour les bornes initiales */
-      /* Rappel utile à la programmation ici -> iterdetail : éléments et leur positions
+      /* Info a mettre dans iterdetail pour les bornes initiales */
+      /* Rappel utile a la programmation ici -> iterdetail : elements et leur positions
          (    bh, optinh, optinhnonint, takeall, step, iter, run)
          (0->L-2,    L-1,            L,     L+1,  L+2,  L+3, L+4) */
-      for (j=0; j < *L - 1; j++)                     /* bornes sur l'échelle des données */
+      for (j=0; j < *L - 1; j++)                     /* bornes sur l'echelle des donnees */
         iterdetail[j + irow * ncol_iter] = combin2try[(j + 1) + i * ncol_combin];
       for (j=*L - 1; j < *L + 2; j++)                /* optinh, optinhnonint et takeall */
         iterdetail[j + irow * ncol_iter] = combin2try[(j + *L) + i * ncol_combin];  
       iterdetail[(*L + 2) + irow * ncol_iter] = 0;    /* pas fait par l'algo de Kozak */
-      iterdetail[(*L + 3) + irow * ncol_iter] = iter; /* numéro de l'itération */
-      iterdetail[(*L + 4) + irow * ncol_iter] = rrow + 1; /* numéro du run de l'algo */
-      /* On vient de remplir une ligne de iterdetail, il faut donc incrémenter de 1 irow. */
+      iterdetail[(*L + 3) + irow * ncol_iter] = iter; /* numero de l'iteration */
+      iterdetail[(*L + 4) + irow * ncol_iter] = rrow + 1; /* numero du run de l'algo */
+      /* On vient de remplir une ligne de iterdetail, il faut donc incrementer de 1 irow. */
       irow = irow + 1;
 
-      /* On peut déjà mettre les info pour les bornesinitiales dans dans rundetail  */
-      /* Rappel utile à la programmation ici -> rundetail : éléments et leur positions
+      /* On peut deja mettre les info pour les bornesinitiales dans dans rundetail  */
+      /* Rappel utile a la programmation ici -> rundetail : elements et leur positions
          (    bh, optinh, optinhnonint, takeall, niter, ibhtype,       ibh,  rep)
          (0->L-2,    L-1,            L,     L+1,   L+2,     L+3, L+4->2L+2, 2L+3) */
       rundetail[(*L + 3) + rrow * ncol_run] = combin2try[0 + i * ncol_combin];
       for (j=0; j < *L-1; j++) rundetail[(j + *L + 4) + rrow * ncol_run] = combin2try[(j + 1) + i * ncol_combin];      
       rundetail[(2 * *L + 3) + rrow * ncol_run] = r + 1;      
 
-      /* Itérations de l'algorithme */      
+      /* Iterations de l'algorithme */      
     	while ( (iter < *maxiter) && (istill < maxstill) ) {	
         
-  		  /* Identifier le nouvel ensemble de bornes à essayer */
-        /* Choix aléatoire de la borne à remplacer*/
+  		  /* Identifier le nouvel ensemble de bornes a essayer */
+        /* Choix aleatoire de la borne a remplacer*/
     		GetRNGstate(); 
     		jbh = floor(unif_rand()* (*L-1)); /* 0, 1, ..., L-2 */
-    			if (jbh==(*L-1)) jbh=0; /* si jbh vaut L-1, ce qui a une probabilité presque nulle */
-        /* Choix aléatoire du pas à faire*/
+    			if (jbh==(*L-1)) jbh=0; /* si jbh vaut L-1, ce qui a une probabilite presque nulle */
+        /* Choix aleatoire du pas a faire*/
     		step =  floor(unif_rand() * maxstep) + 1; /* 1, 2, ..., maxstep */
-    			if (step==(maxstep+1)) step=1; /* si step vaut maxstep+1, ce qui a une probabilité presque nulle */
+    			if (step==(maxstep+1)) step=1; /* si step vaut maxstep+1, ce qui a une probabilite presque nulle */
     		sign = floor(unif_rand()*2); /* 0 ou 1 */
     		if (sign==0) step=-step;
     		PutRNGstate();    		
@@ -1136,7 +1136,7 @@ void algo_Kozak_C(double *combin2try, int *ncombin, int *L, double *x1noc, int *
 /*Rprintf("%d  : ",iter); 
 for (j=0; j < *L-1; j++) Rprintf("%d  ",npbh[j]); */
         
-        /* Détermination des bornes pleines sur l'échelle des données associées à ces bornes modifiées */
+        /* Determination des bornes pleines sur l'echelle des donnees associees a ces bornes modifiees */
         pbh2bhfull_C(npbh, L, x1noc, N1noc, bhfull);
     
         /* Calculs pour la stratification */
@@ -1147,60 +1147,60 @@ for (j=0; j < *L-1; j++) Rprintf("%d  ",npbh[j]); */
                
         /* Acceptation ou rejet des nouvelles bornes */
         if(NhOK == 1 && nhOK == 1){
-    			/* test sur le critère à optimiser (n ou RRMSE) : a-t-il diminué? */
-  				if (*idoptinh) { /* Si on veux calculer le critère sur les nh entiers */
+    			/* test sur le critere a optimiser (n ou RRMSE) : a-t-il diminue? */
+  				if (*idoptinh) { /* Si on veux calculer le critere sur les nh entiers */
             if (!R_FINITE(noptinh)){
               accept = 0;
             } else if ( noptinh < optinh) { /* si noptinh est positif et plus petit que *optinh, */
   						accept = 1;             /* on change les bornes */
-  					} else if (noptinh == optinh) { /* si noptinh est égale à *optinh, */
-  					    /* on va comparer les critère calculé sur les nhnonint */       
+  					} else if (noptinh == optinh) { /* si noptinh est egale a *optinh, */
+  					    /* on va comparer les critere calcule sur les nhnonint */       
   						if (noptinhnonint < optinhnonint) accept = 1; else accept = 0;
   					} else {     /* si noptinh est plus grand que optinh, */					
   						accept = 0;  /* c'est certain qu'on ne change pas les bornes */
   					} 
-  				} else { /* Si on veux calculer le critère sur les nhnonint (non entiers) */
+  				} else { /* Si on veux calculer le critere sur les nhnonint (non entiers) */
             if (!R_FINITE(noptinhnonint)){
               accept = 0;
             } else {
               if ( noptinhnonint < optinhnonint) accept = 1; else accept = 0;
             }
   				}
-  				/* fin du test sur le critère à optimiser */          
+  				/* fin du test sur le critere a optimiser */          
         } else {
-          /* Si les conditions sur les Nh et les nh ne sont pas respectées, on n'accepte pas les nouvelles bornes */
+          /* Si les conditions sur les Nh et les nh ne sont pas respectees, on n'accepte pas les nouvelles bornes */
           accept = 0;
         }
 
 /*Rprintf(" : %d ",accept); 
 Rprintf("\n");*/
 
-      	/* Actions posées dépendamment de l'acceptation ou du rejet des nouvelles bornes */
+      	/* Actions posees dependamment de l'acceptation ou du rejet des nouvelles bornes */
     		if(accept==1) {
-          /* On vérifie d'abord si on doit changer la valeur de maxstep et maxstill,
+          /* On verifie d'abord si on doit changer la valeur de maxstep et maxstill,
              car lorsque l'algorithme se raproche de la convergence, on veut un petit maxstep
              afin de minimiser le temps de calcul. */
             diffrelopti = (optinhnonint - noptinhnonint)/optinhnonint;
             if (istill >= 50 && (step <= 3 && step >= -3) && diffrelopti < 0.001){ 
-            /* La règle arbitraire que je me suis donné est donc : 
-               si on a dû faire plusieurs (plus de 50) itérations sans changement avant d'accepter 
+            /* La regle arbitraire que je me suis donne est donc : 
+               si on a du faire plusieurs (plus de 50) iterations sans changement avant d'accepter 
                les nouvelles bornes et
-               si le pas accepté est petit (inférieur à 3) en valeur absolue et
-               si le changement relatif dans le critère d'optimisation sur les nhnonint est petit 
-               (inférieur à 0.001),
+               si le pas accepte est petit (inferieur a 3) en valeur absolue et
+               si le changement relatif dans le critere d'optimisation sur les nhnonint est petit 
+               (inferieur a 0.001),
                alors on change le maxstep pour 3 et le maxstill pour 50 (suggestions initiales de Kozak
-               dans son article de 2006 dans Techniques d'enquête).*/
+               dans son article de 2006 dans Techniques d'enquete).*/
             maxstep = 3;
             maxstill = 50;
           }
-          /* Le compteur d'itérations sans acceptation de nouvelles bornes est réinitialisé à zéro. */
+          /* Le compteur d'iterations sans acceptation de nouvelles bornes est reinitialise a zero. */
     			istill = 0;
-          /* Les bornes et les critères d'optimisation doivent être mis à jour */
+          /* Les bornes et les criteres d'optimisation doivent etre mis a jour */
     			for (j=0; j < *L-1; j++) pbh[j] = npbh[j];
     			optinh = noptinh;
     			optinhnonint = noptinhnonint;
-          /* On doit enregistrer les résultats dans iterdetail */
-          /* Rappel utile à la programmation ici -> iterdetail : éléments et leur positions
+          /* On doit enregistrer les resultats dans iterdetail */
+          /* Rappel utile a la programmation ici -> iterdetail : elements et leur positions
              (    bh, optinh, optinhnonint, takeall, step, iter, run)
              (0->L-2,    L-1,            L,     L+1,  L+2,  L+3, L+4) */
       		for (j=0; j < *L-1; j++) iterdetail[j + irow * ncol_iter] = bhfull[j+1];
@@ -1210,21 +1210,21 @@ Rprintf("\n");*/
     			iterdetail[(*L + 2) + irow * ncol_iter] = step;
     			iterdetail[(*L + 3) + irow * ncol_iter] = iter + 1;
       		iterdetail[(*L + 4) + irow * ncol_iter] = rrow + 1;
-          /* On vient de remplir une ligne de iterdetail, il faut donc incrémenter de 1 irow. */
+          /* On vient de remplir une ligne de iterdetail, il faut donc incrementer de 1 irow. */
         	irow = irow + 1;
     		} else {
-          /* Le compteur d'itérations sans acceptation de nouvelles bornes est incrémenté de 1. */
+          /* Le compteur d'iterations sans acceptation de nouvelles bornes est incremente de 1. */
       	  istill = istill + 1 ;
-          /* Il n'y a pas d'autres actions à poser. */
+          /* Il n'y a pas d'autres actions a poser. */
     		}
         
-        /* Fin de l'itération */
+        /* Fin de l'iteration */
         iter = iter + 1;
         
     	}
       
-      /* On enregistre les résultats pour les bornes finales dans rundetail  */
-      /* Rappel utile à la programmation ici -> rundetail : éléments et leur positions
+      /* On enregistre les resultats pour les bornes finales dans rundetail  */
+      /* Rappel utile a la programmation ici -> rundetail : elements et leur positions
          (    bh, optinh, optinhnonint, takeall, niter, ibhtype,       ibh,  rep)
          (0->L-2,    L-1,            L,     L+1,   L+2,     L+3, L+4->2L+2, 2L+3) */
       /* En premier on tire  bh, optinh, optinhnonint et takeall de iterdetail */
@@ -1233,7 +1233,7 @@ Rprintf("\n");*/
 
 /*for (j=0; j < ncol_run; j++) Rprintf("%f  ",rundetail[j + rrow * ncol_run]); Rprintf("\n");*/
 
-      /* On vient de remplir une ligne de rundetail, il faut donc incrémenter de 1 rrow. */
+      /* On vient de remplir une ligne de rundetail, il faut donc incrementer de 1 rrow. */
       rrow = rrow + 1;
 
     }

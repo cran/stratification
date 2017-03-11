@@ -53,7 +53,7 @@ strata.geo(x, n = NULL, CV = NULL, Ls = 3, certain=NULL,
 The efficiency of the cumulative root frequency method depends on the number of classes \code{nclass} (see Dalenius and Hodges (1959) for a description of these classes). However, there is no theory about how to choose the best value for \code{nclass} (Hedlin 2000). This is a limit of the method.
 }
 \references{
-Baillargeon, S. and  Rivest L.-P. (2011). The construction of stratified designs in R with the package stratification. \emph{Survey Methodology}, \bold{37}(1), 53-65. \url{ http://www.statcan.gc.ca/pub/12-001-x/2011001/article/11447-eng.pdf }
+Baillargeon, S. and  Rivest L.-P. (2011). The construction of stratified designs in R with the package stratification. \emph{Survey Methodology}, \bold{37}(1), 53-65.
 
 Dalenius, T. and Hodges, J.L., Jr. (1959). Minimum variance stratification. \emph{Journal of the American Statistical Association}, \bold{54}, 88-101.
 
@@ -66,7 +66,6 @@ Louis-Paul Rivest \email{Louis-Paul.Rivest@mat.ulaval.ca} }
 \seealso{ \code{\link{print.strata}}, \code{\link{plot.strata}}, \code{\link{strata.LH}} }
 \examples{
 ### Example for strata.cumrootf
-data(MRTS)
 res <- matrix(NA, nrow=20, ncol=2)
 i <- 1
 for ( n in seq(100,2000,100)){
@@ -78,7 +77,6 @@ plot(res, ylab="suggested sample size n", xlab="number of classes", main=express
      paste("Example of the effect of nclass on n for the cum",sqrt(f)," method")))
 
 ### Example for strata.geo
-data(Sweden)
 strata.geo(x=Sweden$REV84, CV=0.05, Ls=5, alloc=c(0.35,0.35,0), model="none")
 strata.geo(x=Sweden$REV84, CV=0.05, Ls=5, alloc=c(0.35,0.35,0), model="loglinear",
        model.control=list(beta=1.058355, sig2=0.06593083, ph=1))

@@ -1,30 +1,30 @@
 ######################################################################################################
-#' Fonction pour tester si les éléments d'un vecteur numéric sont des entiers. 
+#' Fonction pour tester si les elements d'un vecteur numeric sont des entiers. 
 #' Retourne un vecteur de TRUE pour les entiers, FALSE sinon.
 is.int <- function(x){ (x %% 1) == 0 }
-# Créée le 5 octobre 2012
+# Creee le 5 octobre 2012
 
-#' Fonction pour calculer la valeur par défaut de nclass.
+#' Fonction pour calculer la valeur par defaut de nclass.
 nclass_default <- function(Ls, N1noc){ min(Ls*15, N1noc) } 
-# Créée le 16 octobre 2012
+# Creee le 16 octobre 2012
 
 
 ######################################################################################################
 
-#' Fonction qui permet de valider les arguments donnés en entrée à toutes les fonctions publiques du package
-#' et d'initialiser quelques variables utiles aux calculs à partir de ces arguments.
-#' Cette fonction retourne un objet nommé out qui contient les variables initialisées et aussi 
+#' Fonction qui permet de valider les arguments donnes en entree a toutes les fonctions publiques du package
+#' et d'initialiser quelques variables utiles aux calculs a partir de ces arguments.
+#' Cette fonction retourne un objet nomme out qui contient les variables initialisees et aussi 
 #' certains arguments mis en forme.
 #'
 valid_args <- function(obj_fct, call.ext)
 {
   args.names <- names(obj_fct) ## noms de tous les arguments de la fonction externe, en ordre
-  ## il faut retirer call.ext qui a été créé avant d'appeler valid_args
+  ## il faut retirer call.ext qui a ete cree avant d'appeler valid_args
   args.names <- args.names[-which(args.names == "call.ext")]
   
   ######################################################################
-  # Ce qui suit sert à var.strata.
-  # C'est placé au début car on tire de strata des variables nécessaires aux autres validation.
+  # Ce qui suit sert a var.strata.
+  # C'est place au debut car on tire de strata des variables necessaires aux autres validation.
   
   ## strata
   if (!is.null(call.ext$strata)) {
@@ -35,7 +35,7 @@ valid_args <- function(obj_fct, call.ext)
   }
   if ("strata" %in% args.names) {
     # INITIALISATION DE VARIABLES 
-    # nécessaires à la validation de model.control et rh
+    # necessaires a la validation de model.control et rh
     Ls <- obj_fct$strata$args$Ls
     takenone <- if(is.null(obj_fct$strata$args$takenone)) 0 else obj_fct$strata$args$takenone
     certain <- obj_fct$strata$args$certain    
@@ -54,11 +54,11 @@ valid_args <- function(obj_fct, call.ext)
       stop("'rh.postcorr' must be a logical", call. = FALSE)
   }
 
-  # Fin de ce qui sert uniquement à var.strata
+  # Fin de ce qui sert uniquement a var.strata
   ######################################################################
   
   ### Ls
-  if ("Ls" %in% args.names) Ls <- obj_fct$Ls  ## Car souvent utile dans validations et il est créé ici pour var.strata
+  if ("Ls" %in% args.names) Ls <- obj_fct$Ls  ## Car souvent utile dans validations et il est cree ici pour var.strata
   if (!is.null(call.ext$Ls)) {
     if (!((length(Ls) == 1) && is.numeric(Ls) && is.int(Ls) && (Ls >= 2))) 
       stop("'Ls' must be an interger greater or equal to 2", call. = FALSE)
@@ -76,8 +76,8 @@ valid_args <- function(obj_fct, call.ext)
   if ("x" %in% args.names){
     # INITIALISATION DE VARIABLES
     N <- length(obj_fct$x)  ## Nombre total d'observations
-    N1 <- length(unique(obj_fct$x))  ## Nombre de valeurs distinctes parmi les observations x
-    # TEST SUPPLÉMENTAIRE
+    N1 <- length(table(obj_fct$x))  ## Nombre de valeurs distinctes parmi les observations x
+    # TEST SUPPLEMENTAIRE
     if (N1 < Ls) 
       stop("it is impossible to form Ls strata containing at least one unit with the given 'x'", call. = FALSE)
   }
@@ -103,9 +103,9 @@ valid_args <- function(obj_fct, call.ext)
   }
   
   ### certain
-  if ("certain" %in% args.names) certain <- obj_fct$certain   ## Car souvent utile dans validations et il est créé ici pour var.strata
+  if ("certain" %in% args.names) certain <- obj_fct$certain   ## Car souvent utile dans validations et il est cree ici pour var.strata
   if (!is.null(call.ext$certain)) {
-    # changement de format si on n'a pas un vecteur ou  si des valeurs sont répétées
+    # changement de format si on n'a pas un vecteur ou  si des valeurs sont repetees
     certain <- c(certain)
     if (is.list(certain)) certain <- unlist(certain)
     certain <- unique(certain)
@@ -118,8 +118,8 @@ valid_args <- function(obj_fct, call.ext)
     xnoc <- if (is.null(certain)) obj_fct$x else obj_fct$x[-certain]  ## observations sans la strate certain
     Nc <- length(certain)  ## nombre d'observations dans la strate certain
     Nnoc <- N - Nc  ## nombre d'observations sans la strate certain (dans le vecteur xnoc)
-    N1noc <- length(unique(xnoc))  ## Nombre de valeurs distinctes parmi les observations x
-    # TESTS SUPPLÉMENTAIRES pour éviter bugs
+    N1noc <- length(table(xnoc))  ## Nombre de valeurs distinctes parmi les observations x
+    # TESTS SUPPLEMENTAIRES pour eviter bugs
     if (!is.null(obj_fct$n)) if(Nc > obj_fct$n - Ls)
       stop("'certain' must contain at most 'n'-'Ls' unique values", call. = FALSE) 
     if (N1noc <= Ls)
@@ -128,7 +128,7 @@ valid_args <- function(obj_fct, call.ext)
   
   ### alloc
   if ("alloc" %in% args.names) alloc <- as.list(obj_fct$alloc)  
-    ## car c'est moins long que de toujours écrire obj_fct$alloc et de plus cette variable est modifiée pour args
+    ## car c'est moins long que de toujours ecrire obj_fct$alloc et de plus cette variable est modifiee pour args
   if (!is.null(call.ext$alloc)) {
     if(length(alloc) != 3) stop("'alloc' must be a list of length 3", call. = FALSE)
     if(is.null(names(alloc))) names(alloc) <- c("q1", "q2", "q3")
@@ -148,24 +148,24 @@ valid_args <- function(obj_fct, call.ext)
   }
   
   ### takenone
-  if ("takenone" %in% args.names) ## Car souvent utile dans validations et on change son type si logique donné en entrée
+  if ("takenone" %in% args.names) ## Car souvent utile dans validations et on change son type si logique donne en entree
     takenone <- if(is.logical(obj_fct$takenone)) as.numeric(obj_fct$takenone) else obj_fct$takenone
-  if(!is.null(call.ext$takenone)) { ### dépend de Ls
+  if(!is.null(call.ext$takenone)) { ### depend de Ls
     if (!( is.numeric(takenone) && (length(takenone)==1) && (takenone %in% c(0,1)) ))
       stop("'takenone' must be 0 or 1", call. = FALSE)
   }
-  if (!("takenone" %in% args.names)) takenone <- 0  # pour strata.geo et strata.cumrootf, car takenone est nécessaire pour d'autres validations
+  if (!("takenone" %in% args.names)) takenone <- 0  # pour strata.geo et strata.cumrootf, car takenone est necessaire pour d'autres validations
   L <- Ls + takenone
   
   ### bh
-  if (!is.null(call.ext$bh)) { ### dépend de L
+  if (!is.null(call.ext$bh)) { ### depend de L
     if (!((length(obj_fct$bh) == L - 1) && is.numeric(obj_fct$bh))) 
       stop("'bh' must be a numeric vector of length Ls+takenone-1", call. = FALSE)
   }
   
   ### nclass
   if (!is.null(call.ext$nclass)) {  
-    nclass <- obj_fct$nclass  ## car nclass doit être retourné en sortie, il est possiblement modifié
+    nclass <- obj_fct$nclass  ## car nclass doit etre retourne en sortie, il est possiblement modifie
     if (!((length(nclass) == 1) && is.numeric(nclass) && is.int(nclass) && nclass >= Ls)) 
       stop("'nclass' must be an integer greater or equal to Ls", call. = FALSE)    
   } else { 
@@ -182,9 +182,9 @@ valid_args <- function(obj_fct, call.ext)
   }
   
   ### takeall
-  if ("takeall" %in% args.names) ## Car on change son type si logique donné en entrée
+  if ("takeall" %in% args.names) ## Car on change son type si logique donne en entree
     takeall <- if(is.logical(obj_fct$takeall)) as.numeric(obj_fct$takeall) else obj_fct$takeall
-  if(!is.null(call.ext$takeall)) { ### dépend de Ls
+  if(!is.null(call.ext$takeall)) { ### depend de Ls
     if (!(is.numeric(takeall) && length(takeall) == 1 && is.int(takeall) && takeall >= 0 && takeall <= Ls-1))
       stop("'takeall' must be an integer between 0 and 'Ls'-1 inclusively", call. = FALSE)
   }
@@ -196,7 +196,7 @@ valid_args <- function(obj_fct, call.ext)
   }
   
   ### model
-  if ("model" %in% args.names) model <- obj_fct$model[1]  ## car model est modifié pour args
+  if ("model" %in% args.names) model <- obj_fct$model[1]  ## car model est modifie pour args
   if (!is.null(call.ext$model)) {   
     model.accepted <- c("none","loglinear","linear","random")
     if (!(model %in% model.accepted))  
@@ -211,8 +211,8 @@ valid_args <- function(obj_fct, call.ext)
   
   ### model.control
   if ("model.control" %in% args.names) model.control <- obj_fct$model.control  
-    ## car ce serait trop long de toujours écrire obj_fct$model.control et cette variable est modifiée pour args
-  if (!is.null(call.ext$model.control)) { ### dépend de Ls, certain, takenone et model
+    ## car ce serait trop long de toujours ecrire obj_fct$model.control et cette variable est modifiee pour args
+  if (!is.null(call.ext$model.control)) { ### depend de Ls, certain, takenone et model
     if(!is.list(model.control)) stop("'model.control' must be a list", call. = FALSE)
     if( length(model.control) > 0 && is.null(names(model.control)) ) 
       stop("'The elements of the list 'model.control' must be named", call. = FALSE)
@@ -257,8 +257,8 @@ valid_args <- function(obj_fct, call.ext)
               paste(dQuote(model.param.used), collapse=", "),")\nthese elements have been ignored", call. = FALSE)
   }
   if ("model.control" %in% args.names) {
-    # INITIALISATION DE VARIABLES (je dois toutes les initialiser peu importe le modèle car
-    # je dois envoyer une valeur à mes sous-fonctions qui font les calculs)
+    # INITIALISATION DE VARIABLES (je dois toutes les initialiser peu importe le modele car
+    # je dois envoyer une valeur a mes sous-fonctions qui font les calculs)
     beta <- if(is.null(model.control$beta) || model=="none") 1 else model.control$beta
     sig2 <- if(is.null(model.control$sig2) || model=="none") 0 else model.control$sig2
     ph   <- if(is.null(model.control$ph)   || model=="none") 1 else model.control$ph
@@ -272,7 +272,7 @@ valid_args <- function(obj_fct, call.ext)
     gamma   <- if(is.null(model.control$gamma))   0 else model.control$gamma
     epsilon <- if(is.null(model.control$epsilon)) 0 else model.control$epsilon
     
-    # Reformatage de model.control pour la sortie, ici je garde seulement les paramètres propres au modèle choisi
+    # Reformatage de model.control pour la sortie, ici je garde seulement les parametres propres au modele choisi
     model.control <- if (identical(model[1],"none")) list() else
       if (identical(model[1],"loglinear")) list(beta=beta,sig2=sig2, ph=ph) else
         if (identical(model[1],"linear")) list(beta=beta, sig2=sig2, gamma=gamma) else
@@ -283,13 +283,13 @@ valid_args <- function(obj_fct, call.ext)
       model.control <- c(model.control, pcertain=pcertain) 
     
     # Dernier ajustement
-    ph <- c(ptakenone, ph) ## ph est ainsi assuré d'être de longueur L, ce dont on a besoin pour les calculs.
-    ## Cependant, dans l'élément model.control, ph doit être de longueur Ls, 
-    ## c'est pourquoi j'ajoute ptakenone après avoir créé model.control.
+    ph <- c(ptakenone, ph) ## ph est ainsi assure d'etre de longueur L, ce dont on a besoin pour les calculs.
+    ## Cependant, dans l'element model.control, ph doit etre de longueur Ls, 
+    ## c'est pourquoi j'ajoute ptakenone apres avoir cree model.control.
   }
   
   ### rh
-  if(!is.null(call.ext$rh)) { ### dépend de Ls et takenone
+  if(!is.null(call.ext$rh)) { ### depend de Ls et takenone
     if (!( (length(obj_fct$rh) %in% c(1, Ls)) && is.numeric(obj_fct$rh) && all(obj_fct$rh > 0 & obj_fct$rh <= 1)))
       stop("'rh' must be a single numeric or a numeric vector of length Ls. Each element of 'rh' must be positive and equal or lower than 1", call. = FALSE)
     if (length(obj_fct$rh)==1) obj_fct$rh <- rep(obj_fct$rh, Ls)
@@ -297,22 +297,22 @@ valid_args <- function(obj_fct, call.ext)
   if ("rh" %in% args.names) {
     # INITIALISATION DE VARIABLES
     rhL <- if (takenone > 0) c(rep(1,length(takenone)), obj_fct$rh) else obj_fct$rh
-    ## Pour les calculs, rh doit être de longueur L. La valeur dans la première strate n'est jamais utilisée
-    ## s'il s'agit d'une strate takenone, mais pour simplifier le code je veux que l'index i réfère toujours à la
-    ## strate i (et non à la strate i + takenone, ce qui aurait été le cas avec le rh en entrée de longueur Ls).
+    ## Pour les calculs, rh doit etre de longueur L. La valeur dans la premiere strate n'est jamais utilisee
+    ## s'il s'agit d'une strate takenone, mais pour simplifier le code je veux que l'index i refere toujours a la
+    ## strate i (et non a la strate i + takenone, ce qui aurait ete le cas avec le rh en entree de longueur Ls).
   }
   
-  ## Ce qui suit sert à strata.LH seulement
+  ## Ce qui suit sert a strata.LH seulement
   
   ### initbh
   if (!is.null(call.ext$initbh)) {
     if (!is.null(obj_fct$initbh))   
       if (!((length(obj_fct$initbh) %in% c(Ls+takenone-1, Ls-1)) && is.numeric(obj_fct$initbh))) 
         stop("'initbh' must be a numeric vector of length Ls+takenone-1 or Ls-1", call. = FALSE)
-  } # Les valeurs par défaut sont données dans strata.LH, le code est plus clair et moins répétitif ainsi.
+  } # Les valeurs par defaut sont donnees dans strata.LH, le code est plus clair et moins repetitif ainsi.
   
   ### algo
-  if ("algo" %in% args.names) algo <- obj_fct$algo[1] ## car algo est retourné en sortie et modifié pour args
+  if ("algo" %in% args.names) algo <- obj_fct$algo[1] ## car algo est retourne en sortie et modifie pour args
   if (!is.null(call.ext$algo)) {
     if (!(algo %in% c("Kozak", "Sethi"))) stop("'algo' must be the character string 'Kozak' or 'Sethi'", call. = FALSE)
     if ("Sethi" == algo) {
@@ -327,7 +327,7 @@ valid_args <- function(obj_fct, call.ext)
   
   ### algo.control
   if ("algo.control" %in% args.names) algo.control <- obj_fct$algo.control  
-    ## car ce serait trop long de toujours écrire obj_fct$algo.control
+    ## car ce serait trop long de toujours ecrire obj_fct$algo.control
   if (!is.null(call.ext$algo.control)) {
     if (!is.list(algo.control)) 
       stop("'algo.control' must be a list", call. = FALSE)
@@ -388,26 +388,26 @@ valid_args <- function(obj_fct, call.ext)
         trymany <- if(is.null(algo.control$trymany)) TRUE else algo.control$trymany
       }
     } else { ## if (algo=="Sethi")
-      # Avec Sethi, on a besoin de ces variables dans le code, mais elles ne peuvent pas être données en entrée.
+      # Avec Sethi, on a besoin de ces variables dans le code, mais elles ne peuvent pas etre donnees en entree.
       minNh <- 2
       idopti <- "nh"
     }
   }  
     
-  # Pour créer la liste comprenant les valeurs utilisées (données en entrée ou par défaut) pour tous
+  # Pour creer la liste comprenant les valeurs utilisees (donnees en entree ou par defaut) pour tous
   # les arguments de la fonction.
-  # Note : algo.control est redéfini dans strata.LH
+  # Note : algo.control est redefini dans strata.LH
   current <- as.list(environment())
-  ## identification de l'endroit où on doit aller chercher les argument : l'environnement de travail courant où obj_fct
+  ## identification de l'endroit ou on doit aller chercher les argument : l'environnement de travail courant ou obj_fct
   args.current <- intersect(names(current), args.names)
   args.obj_fct <- setdiff(args.names, args.current)
-  ## Création de args
+  ## Creation de args
   args <- current[args.current]  ## Pour prendre les arguments dans l'environnement de travail courant
-  args <- c(args, obj_fct[args.obj_fct])   ## Pour ajouter les arguments à aller chercher dans obj_fct
+  args <- c(args, obj_fct[args.obj_fct])   ## Pour ajouter les arguments a aller chercher dans obj_fct
   args <- args[args.names]  ## Pour replacer les arguments dans le bon ordre
 
   # Sortie
   rm(obj_fct)
   as.list(environment())    
 }
-# Créée le 4 octobre 2012 : checkargs modifié
+# Creee le 4 octobre 2012 : checkargs modifie

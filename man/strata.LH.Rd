@@ -176,11 +176,11 @@ When \code{trymany=TRUE}, if a set of initial boundaries do not meet the conditi
   \item{nsol}{Only for Kozak's algorithm : the number of possible sets of boundaries (see \bold{Details}).}   
 }
 \references{
-Baillargeon, S., Rivest, L.-P., Ferland, M. (2007). Stratification en enquetes entreprises : Une revue et quelques avancees. \emph{Proceedings of the Survey Methods Section, 2007 SSC Annual Meeting}. \url{ http://www.ssc.ca/survey/documents/SSC2007_S_Baillargeon.pdf }
+Baillargeon, S., Rivest, L.-P., Ferland, M. (2007). Stratification en enquetes entreprises : Une revue et quelques avancees. \emph{Proceedings of the Survey Methods Section, 2007 SSC Annual Meeting}.
 
 Baillargeon, S. and Rivest, L.-P. (2009). A general algorithm for univariate stratification. \emph{International Stratification Review}, \bold{77}(3), 331-344.
 
-Baillargeon, S. and  Rivest L.-P. (2011). The construction of stratified designs in R with the package stratification. \emph{Survey Methodology}, \bold{37}(1), 53-65. \url{ http://www.statcan.gc.ca/pub/12-001-x/2011001/article/11447-eng.pdf }
+Baillargeon, S. and  Rivest L.-P. (2011). The construction of stratified designs in R with the package stratification. \emph{Survey Methodology}, \bold{37}(1), 53-65.
 
 Dalenius, T. and Hodges, J.L., Jr. (1959). Minimum variance stratification. \emph{Journal of the American Statistical Association}, \bold{54}, 88-101.
 
@@ -204,8 +204,6 @@ Louis-Paul Rivest \email{Louis-Paul.Rivest@mat.ulaval.ca} }
 \examples{
 #########################################################
 ### Sethi's algorithm versus Kozak's algorithm
-
-data(UScities)
 
 # LACK OF CONVERGENCE
 # Here is an example of numerical difficulties met with Sethi but not with Kozak  
@@ -243,8 +241,6 @@ Kozak
 #########################################################
 ### Take-none stratum
 
-data(MRTS)
-
 # As illustrated in the following example (presented in Baillargeon and Rivest 2011), 
 # it is sometimes beneficial to include a take-none stratum in the stratified design 
 # (possibly with a bias penalty lower than 1).
@@ -263,8 +259,6 @@ tn1.Sethi
 #########################################################
 ### Automatic detection of a take-all stratum
 
-# data(UScities)
-
 # # As in the following example, a beneficial take-all stratum is not always detected 
 # # by the algorithm. Therefore, it is often a good idea to obtain a stratified design
 # # with and without a take-all stratum and to compare the results.
@@ -282,8 +276,6 @@ tn1.Sethi
 
 #########################################################
 ### Models for the discrepancy between Y and X
-
-data(Sweden)
 
 # LOGLINEAR MODEL WITH MORTALITY: see help(Sweden)
 

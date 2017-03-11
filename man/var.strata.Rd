@@ -48,13 +48,12 @@ The weakness of this posterior correction is that it cannot take into account no
   \item{args }{A list of all the arguments input to the function or used by default. }
 }
 \references{
-Baillargeon, S. and  Rivest L.-P. (2011). The construction of stratified designs in R with the package stratification. \emph{Survey Methodology}, \bold{37}(1), 53-65. \url{ http://www.statcan.gc.ca/pub/12-001-x/2011001/article/11447-eng.pdf }
+Baillargeon, S. and  Rivest L.-P. (2011). The construction of stratified designs in R with the package stratification. \emph{Survey Methodology}, \bold{37}(1), 53-65.
 }
 \author{ Sophie Baillargeon \email{Sophie.Baillargeon@mat.ulaval.ca} and\cr
 Louis-Paul Rivest \email{Louis-Paul.Rivest@mat.ulaval.ca} }
 \seealso{ \code{\link{strata.bh}}, \code{\link{strata.cumrootf}}, \code{\link{strata.geo}}, \code{\link{strata.LH}} }
 \examples{
-data(Sweden)
 nomodel <- strata.LH(x=Sweden$REV84, CV=0.05, Ls=3, alloc=c(0.5,0,0.5),
           takeall=1, model="none")
 # We can give a vector of the Y values for every unit in the population
@@ -69,7 +68,6 @@ model <- strata.LH(x=Sweden$REV84, CV=0.05, Ls=3, alloc=c(0.5,0,0.5),
 var.strata(model, y=Sweden$RMT85)
 
 ### Examples of posterior correction for non-response
-data(MRTS)
 LH <- strata.LH(x=MRTS, CV=0.01, Ls=4, alloc=c(0.5,0,0.5), takeall=1)
 LH
 # Without non-response in the take-all strata

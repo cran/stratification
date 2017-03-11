@@ -5,7 +5,7 @@
 \description{
 This data set contains some variables from the 2001 Survey of Household Spending (SHS) carried out by Statistics Canada. The main purpose of this survey is to obtain detailed information about household spending during the reference year.
 }
-\usage{data(SHS)}
+\usage{SHS}
 \format{
   A data frame with 16057 observations on the following 7 variables.
   \describe{
@@ -24,12 +24,7 @@ In this package, \code{HHINCTOT} is used as a stratification variable and \code{
 \source{
 Income Statistics Division, Statistics Canada.
 }
-\references{
-Information on Statistics Canada Survey of Household Spending: \url{http://www.statcan.ca/cgi-bin/imdb/p2SV.pl?Function=getSurvey&SDDS=3508&lang=en&db=IMDB&dbg=f&adm=8&dis=2}
-}
 \examples{
-data(SHS)
-
 # Estimation of the response rate
 X <- SHS$HHINCTOT[SHS$HHINCTOT>0]
 Y <- SHS$M101[SHS$HHINCTOT>0]
@@ -49,7 +44,7 @@ summary(reg)
 
 # Stratification assuming X=Y
 nomodel <- strata.LH(x=X, CV=0.05, Ls=3, alloc=c(0.5,0,0.5), takeall=0, 
-           model="none", algo.control=list(trymany=FALSE, rep=3))
+           model="none", algo.control=list(trymany=FALSE, rep=2))
 nomodel
 var.strata(nomodel, y=Y) # The target CV is far from being reached
 
@@ -58,7 +53,7 @@ var.strata(nomodel, y=Y) # The target CV is far from being reached
 model <- strata.LH(x=X, CV=0.05, Ls=3, alloc=c(0.5,0,0.5), takeall=0,
          model="loglinear", model.control=list(beta=reg$coef[2],
          sig2=summary(reg)$sigma^2, ph=0.97), initbh=nomodel$bh,
-         algo.control=list(trymany=FALSE, rep=3))
+         algo.control=list(trymany=FALSE, rep=2))
 model
 var.strata(model,y=Y) # The target CV is reached
 }

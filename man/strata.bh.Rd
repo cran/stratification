@@ -49,13 +49,12 @@ strata.bh(x, bh, n = NULL, CV = NULL, Ls = 3, certain = NULL,
   \item{args }{A list of all the argument values input to the function or set by default. }
 }
 \references{
-Baillargeon, S. and  Rivest L.-P. (2011). The construction of stratified designs in R with the package stratification. \emph{Survey Methodology}, \bold{37}(1), 53-65. \url{ http://www.statcan.gc.ca/pub/12-001-x/2011001/article/11447-eng.pdf }
+Baillargeon, S. and  Rivest L.-P. (2011). The construction of stratified designs in R with the package stratification. \emph{Survey Methodology}, \bold{37}(1), 53-65.
 }
 \author{ Sophie Baillargeon \email{Sophie.Baillargeon@mat.ulaval.ca} and\cr
 Louis-Paul Rivest \email{Louis-Paul.Rivest@mat.ulaval.ca} }
 \seealso{ \code{\link{print.strata}}, \code{\link{plot.strata}}, \code{\link{strata.cumrootf}}, \code{\link{strata.geo}}, \code{\link{strata.LH}} }
 \examples{
-data(USbanks)
 adjust <- strata.geo(x=USbanks, CV=0.01, Ls=4, alloc=c(0.35,0.35,0))
 adjust
 adjust$nhnonint

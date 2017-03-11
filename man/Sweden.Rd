@@ -5,7 +5,7 @@
 \description{
 This data set comes from Sarndal et al.'s book (1992), Appendix B. It contains different variables that describe 284 municipalities in Sweden.
 }
-\usage{data(Sweden)}
+\usage{Sweden}
 \format{
   A data frame with 284 observations on the following 11 variables.
   \describe{
@@ -32,7 +32,6 @@ Sarndal, C. E., Swensson, B. and Wretman, J. (1992). \emph{Model Assisted Survey
 Rivest, L.-P. (2002). A generalization of the Lavallee and Hidiroglou algorithm for stratification in business surveys. \emph{Survey Methodology}, \bold{28}(2), 191-198.
 }
 \examples{
-data(Sweden)
 X <- Sweden$REV84
 Y <- Sweden$RMT85
 

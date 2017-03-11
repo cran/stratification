@@ -15,10 +15,10 @@ var.strata <- function(strata, y = NULL, rh = strata$args$rh, rh.postcorr = FALS
   # Variable pour la sortie : liste des arguments
   args <- out$args;
   
-  # Initialisation de variables tirées de strata : 
-  ##### ÉTAPE TRÈS IMPORTANTE
+  # Initialisation de variables tirees de strata : 
+  ##### ETAPE TRES IMPORTANTE
   x <- if (!is.null(call.ext$y)) y else strata$args$x
-  # Si y a été donné en entrée, on doit faire les calculs sur y plutôt que x, alors on modifie x
+  # Si y a ete donne en entree, on doit faire les calculs sur y plutot que x, alors on modifie x
   #####
   N <- length(x)  ## Nombre total d'observations
   Nc <- length(certain)
@@ -29,41 +29,41 @@ var.strata <- function(strata, y = NULL, rh = strata$args$rh, rh.postcorr = FALS
   Nh <- strata$Nh
   bias.penalty <- if(is.null(strata$args$bias.penalty)) 1 else strata$args$bias.penalty
   
-  # Initialisation de quelques simples stat calculées sur les données (EX, EX2, EYc)
+  # Initialisation de quelques simples stat calculees sur les donnees (EX, EX2, EYc)
   out <- init_stat(obj_fct = as.list(environment()))
   EX <- out$EX;  EX2 <- out$EX2; EYc <- out$EYc; 
   
-  # Calcul des moments anticipées
-  moments <- .C("get_momentY_C", as.double(xnoc), as.integer(stratumIDnoc), as.integer(Nnoc),  
+  # Calcul des moments anticipees
+  moments <- .C(get_momentY_C, as.double(xnoc), as.integer(stratumIDnoc), as.integer(Nnoc),  
                 as.integer(Nh), as.integer(L), as.integer(Nc), as.double(EYc), as.integer(takenone),
                 as.integer(nmodel), as.double(beta), as.double(sig2), as.double(ph), as.double(gamma), 
                 as.double(epsilon), as.double(EX), as.double(EX2),
                 EYh = as.double(rep(0,L)), VYh = as.double(rep(0,L)), phih = as.double(rep(0,L)), 
-                psih = as.double(rep(0,L)), TY = as.double(0), TAY = as.double(0), NAOK = TRUE, PACKAGE="stratification")  
+                psih = as.double(rep(0,L)), TY = as.double(0), TAY = as.double(0), NAOK = TRUE)  
   EYh <- moments$EYh 
   VYh <- moments$VYh
   TY <- moments$TY
   TAY <- moments$TAY  
   
-  # Ajustement à postériori pour la non-réponse, si demandé et si CV cible
+  # Ajustement a posteriori pour la non-reponse, si demande et si CV cible
   if (rh.postcorr && !is.null(strata$args$n)){
     warning("no posterior correction for non-response is available for stratified design with a target n")
     dopostcorr <- FALSE
-    ## Si le plan d'échantillonnage comporte un n cible, celui-ci ne serait plus atteint si on appliquait
-    ## notre correction à postériori pour non-réponse qui gonfle les nh. On ne le fait donc pas.
+    ## Si le plan d'echantillonnage comporte un n cible, celui-ci ne serait plus atteint si on appliquait
+    ## notre correction a posteriori pour non-reponse qui gonfle les nh. On ne le fait donc pas.
   } else {
     dopostcorr <- rh.postcorr
   }  
   nhnonint <- if (dopostcorr) strata$nhnonint*strata.rhL/rhL else strata$nhnonint
   nh <- if (dopostcorr) pmin(ceiling(nhnonint), Nh) else strata$nh
-    ## Remarque : Ici, on n'arrondit pas nh de la meme façon que dans le reste du package.
+    ## Remarque : Ici, on n'arrondit pas nh de la meme facon que dans le reste du package.
 
   # Pour le calcul d'autres valeurs pour la sortie
   n <- get_n(nhcalcul = nh, obj_fct = as.list(environment()))
   RRMSE <- NA  ## car on veut que get_stat_out fasse le calcul du RRMSE
   out_stat <- get_stat_out(obj_fct = as.list(environment()))
   
-  # Sortie des résultats
+  # Sortie des resultats
   out <- list(nh=nh, n=n, nhnonint=nhnonint, certain.info = c(Nc = Nc, meanc = EYc), meanh = EYh, varh = VYh, mean=TY/N)
   out <- c(out, out_stat)
   out <- c(out, list(call = call.ext, date = date(), args = args))
@@ -122,7 +122,7 @@ print.var.strata <- function(x,...)
   cat("\nTotal sample size:",x$n,"\n")
   cat("Anticipated population mean:",x$mean,"\n")
   
-  # Section sur les moments anticipés
+  # Section sur les moments anticipes
   sortie <- if (is.null(x$args$strata$args$takenone)) 1 else { if(0==x$args$strata$args$takenone) 2 else 3 }
   if (sortie%in%c(1,2)) {
     cat("Anticipated CV:",x$RRMSE,"\n")
