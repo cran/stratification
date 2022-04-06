@@ -10,8 +10,8 @@ This package contains various functions for univariate stratification of survey 
 \tabular{ll}{
 Package: \tab stratification\cr
 Type: \tab Package\cr
-Version: \tab 2.2-6\cr
-Date: \tab 2017-03-08\cr
+Version: \tab 2.2-7\cr
+Date: \tab 2022-04-06\cr
 License: \tab GPL-2\cr
 }
 

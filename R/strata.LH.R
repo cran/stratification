@@ -395,9 +395,9 @@ strata.LH <- function(x, n = NULL, CV = NULL, Ls = 3, certain = NULL,
   out <- strata.bh.internal(bhfull = bhfull, takeallin = takeallout, takeall.adjust = FALSE, obj_fct = as.list(environment()))
 
   # Avertissements que l'algo n'a pas bouge :     
-  if(algo=="Kozak" && !is.na(niter) && !trymany){
+  if(algo=="Kozak" && !any(is.na(niter)) && !trymany){
     notmove <- if (isTRUE(all.equal(resibh$Nh, out$Nh))) TRUE else FALSE
-  } else if (algo=="Kozak" && !is.na(niter) && trymany){
+  } else if (algo=="Kozak" && !any(is.na(niter)) && trymany){
     notmove <- if (all(run.detail[,"niter"] == maxstill)) TRUE else FALSE
   } else notmove <- FALSE
   if (notmove){

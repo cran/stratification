@@ -110,7 +110,7 @@ valid_args <- function(obj_fct, call.ext)
     if (is.list(certain)) certain <- unlist(certain)
     certain <- unique(certain)
     # validation principale
-    if (!(is.numeric(certain) && all(is.int(certain) && certain > 0 && certain < N)))
+    if (!(is.numeric(certain) && all(is.int(certain) & certain >= 1 & certain <= N)))
       stop("'certain' must be a vector of integers between 1 and N, the length of 'x'", call. = FALSE)
   }
   if ("certain" %in% args.names){
